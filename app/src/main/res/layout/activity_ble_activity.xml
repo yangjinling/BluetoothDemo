@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    tools:context="com.cw.bluetoothdemo.activity.BleActivity">
+
+
+    <Button
+        android:id="@+id/button1"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:onClick="onButtonClicked"
+        android:text="Button" />
+    
+<Button
+    android:id="@+id/update"
+    android:text="更新特征值"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content" />
+ 
+        <ScrollView
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content" >
+
+        <LinearLayout
+            android:id="@+id/LinearLayout2"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/LinearLayout1"
+            android:layout_marginTop="5dp"
+            android:orientation="vertical"
+            android:gravity="left" >
+
+
+            <TextView
+                android:id="@+id/textView3"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignLeft="@+id/button1"
+                android:layout_marginTop="17dp"
+                android:text="TextView" />
+
+
+
+
+
+        </LinearLayout>
+
+    </ScrollView>
+</LinearLayout>

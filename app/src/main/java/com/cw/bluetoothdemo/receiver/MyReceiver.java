@@ -18,7 +18,7 @@ public class MyReceiver extends BroadcastReceiver {
     public void onReceive(Context context, Intent intent) {
         String action = intent.getAction();
         if (action.equals(action_boot)) {
-            Intent ootStartIntent = new Intent(context, MainActivity.class);
+            Intent ootStartIntent = new Intent(context, BluetoothServerActivity.class);
             ootStartIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
             context.startActivity(ootStartIntent);
         }

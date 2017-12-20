@@ -55,7 +55,7 @@ public class ClassicBluetoothService extends Service {
                     String str = msg.getData().getString(BluetoothChatUtil.READ_MSG);
                     Contents.COMMAND_CURRENT = str;
                     Log.e("YJL", "str.length" + str.length());
-                    Toast.makeText(getApplicationContext(), "读成功" + str, Toast.LENGTH_SHORT).show();
+//                    Toast.makeText(getApplicationContext(), "读成功" + str, Toast.LENGTH_SHORT).show();
                     //TODO  此时应该将指令通过串口发出去并从串口中获取内容并传送给客户端
                     sendBroad(Contents.TYPE_BLUE, str);
                     break;
@@ -65,7 +65,7 @@ public class ClassicBluetoothService extends Service {
 //                    String str = new String(buf, 0, buf.length);
                     //发送成功的提示可有可无
                     String str = BJCWUtil.HexTostr(buf, buf.length);
-                    Toast.makeText(getApplicationContext(), "发送成功" + str, Toast.LENGTH_SHORT).show();
+//                    Toast.makeText(getApplicationContext(), "发送成功" + str, Toast.LENGTH_SHORT).show();
                     break;
                 }
                 default:

@@ -13,7 +13,14 @@
     <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
-
+    <!-- SD读写权限 -->
+    <uses-permission android:name="android.permission.MOUNT_UNMOUNT_FILESYSTEMS" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <!-- 如果使用录音机API时，需要RECORD_AUDIO权限，否则不需要 -->
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
+    <!-- 通常需要设置一些sd卡路径（例如日志路径）为可写，因此需要能够写外部存储 -->
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
     <!-- 允许应用程序改变网络状态 -->
     <uses-permission android:name="android.permission.CHANGE_NETWORK_STATE" />
     <!-- 允许应用程序改变WIFI连接状态 -->
@@ -28,20 +35,22 @@
     <application
         android:name=".app.MyApplication"
         android:allowBackup="true"
+        android:allowClearUserData="true"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
-        android:allowClearUserData="true"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
         <activity android:name=".activity.MainActivity">
+
+        </activity>
+        <activity android:name=".activity.BluetoothServerActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".activity.BluetoothServerActivity"></activity>
         <activity android:name=".activity.WifiServerActivity" />
 
         <service android:name=".service.ClassicBluetoothService" />
@@ -60,6 +69,7 @@
         </receiver>
 
         <activity android:name=".activity.BleActivity"></activity>
+        <service android:name=".service.MediaPlayService" />
     </application>
 
 </manifest>

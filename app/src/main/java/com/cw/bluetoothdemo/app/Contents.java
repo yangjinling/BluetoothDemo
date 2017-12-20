@@ -24,8 +24,11 @@ public class Contents {
     public final static String COMMAND_IC_CONTACT_1 = "EE0011FB80201400000A62000000000000000000";
     //IC_非接触卡指令
     public final static String COMMAND_IC_NOCONTACT_1 = "EE0011FB80101400000A62000000000000000000";
+
+    public final static String COMMAND_IC_END="F80007810005000000";
     //身份证指令
     public final static String COMMAND_IDCARD_1 = "F80007FB801114000000";
+    public final static String COMMAND_IDCARD_2 = "F80007FB810005000000";
     //指纹指令
     public final static String COMMAND_FINGER = "F80007FB803414000000";
     //磁条卡指令
@@ -37,4 +40,26 @@ public class Contents {
 
     //当前接收到手机端的指令
     public static String COMMAND_CURRENT = "";
+
+    //插卡语音
+    public final static String VOICE_BANKCARD1 = "contact";//请插卡
+    //挥卡语音
+    public final static String VOICE_BANKCARD2 = "nocontact";//请挥卡
+    //插卡语音
+    public final static String VOICE_MAGNETIC = "magnetic";//请刷磁条卡
+    //身份证语音
+    public final static String VOICE_IDCARD = "idcard";//请放身份证
+    //输入密码
+    public final static String VOICE_KEY = "key";//请按键
+    //指纹
+    public final static String VOICE_FINGER = "finger";//请按指纹
+
+    public static boolean play_Contact = false;
+    public static boolean play_NoContact = false;
+    public static boolean play_Idcard = false;
+    public static boolean play_Magnetic = false;
+    public static boolean play_KeyMing = false;
+    public static boolean play_KeyMi = false;
+    public static boolean play_Finger = false;
+
 }

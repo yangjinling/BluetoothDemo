@@ -149,10 +149,10 @@ public class BleService extends Service {
                                             String strSW = s.substring(s.length() - 4);
                                             int pulSW = Integer.valueOf(strSW, 16);
                                             Log.e("YJL", "pulSw===" + pulSW);
-                                            if (pulSW == 0x9000) {
-                                                boolean completion = BJCWUtil.judgeData(builder.toString());
-                                                if (completion) {
-                                                    dealDate(BJCWUtil.StrToHex(builder.toString().trim()), device, character);
+                                            boolean completion = BJCWUtil.judgeData(builder.toString());
+                                            if (completion) {
+                                                dealDate(BJCWUtil.StrToHex(builder.toString().trim()), device, character);
+                                                if (pulSW == 0x9000) {
                                                 } else {
                                                     builder = new StringBuilder();
                                                 }

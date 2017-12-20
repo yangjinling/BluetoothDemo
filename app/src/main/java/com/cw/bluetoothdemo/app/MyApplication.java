@@ -24,8 +24,6 @@ public class MyApplication extends Application {
     public void onCreate() {
         super.onCreate();
         AppConfig.setContext(getApplicationContext());
-        /*CrashHandler crashHandler = CrashHandler.getInstance();
-        crashHandler.init(getApplicationContext());*/
         AppConfig.getInstance().setConnection(new SerialConnection(AppConfig.getContext()));
         AppConfig.getInstance().setmBluetoothChatUtil(BluetoothChatUtil.getInstance(getApplicationContext()));
         character = new BluetoothGattCharacteristic(
@@ -34,7 +32,6 @@ public class MyApplication extends Application {
 //        character.addDescriptor(new BluetoothGattDescriptor(CCCD, BluetoothGattDescriptor.PERMISSION_WRITE));
         service = new BluetoothGattService(UUID.fromString(Contents.serviceUUID),
                 BluetoothGattService.SERVICE_TYPE_PRIMARY);
-
         service.addCharacteristic(character);
         AppConfig.getInstance().setCharacter(character);
         AppConfig.getInstance().setService(service);

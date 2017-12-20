@@ -13,13 +13,16 @@ import android.os.Message;
 import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.cw.bluetoothdemo.R;
 import com.cw.bluetoothdemo.app.AppConfig;
+import com.cw.bluetoothdemo.manager.MediaServiceManager;
 import com.cw.bluetoothdemo.service.BleService;
 import com.cw.bluetoothdemo.service.ClassicBluetoothService;
 import com.cw.bluetoothdemo.service.WifiService;
@@ -28,7 +31,10 @@ import com.cw.bluetoothdemo.util.BluetoothChatUtil;
 import com.cw.bluetoothdemo.app.Contents;
 import com.cw.bluetoothdemo.util.BoxDataUtils;
 
+import java.io.BufferedReader;
 import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.List;
 
 public class BluetoothServerActivity extends Activity implements OnClickListener {
     private final static String TAG = "BluetoothServerActivity";
@@ -103,6 +109,9 @@ public class BluetoothServerActivity extends Activity implements OnClickListener
     private TextView command;
     private StringBuilder stringBuilder;
     private StringBuilder resultBuilder;
+    private ListView lv;
+    private List<String> lists = new ArrayList<>();
+    private ArrayAdapter<String> adapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -111,6 +120,7 @@ public class BluetoothServerActivity extends Activity implements OnClickListener
         mContext = this;
         stringBuilder = new StringBuilder();
         resultBuilder = new StringBuilder();
+        adapter = new ArrayAdapter<String>(this, R.layout.list_item, lists);
         initView();
         initBluetooth();
         register();
@@ -138,12 +148,14 @@ public class BluetoothServerActivity extends Activity implements OnClickListener
         mEdttMessage = (EditText) findViewById(R.id.edt_message);
         mBtConnectState = (TextView) findViewById(R.id.tv_connect_state);
         mTvChat = (TextView) findViewById(R.id.tv_chat);
-
+        lv = ((ListView) findViewById(R.id.lv));
+        lv.setAdapter(adapter);
         mBtnBluetoothVisibility.setOnClickListener(this);
         mBtnBluetoohDisconnect.setOnClickListener(this);
         mBtnSendMessage.setOnClickListener(this);
         mProgressDialog = new ProgressDialog(this);
         start_service = ((Button) findViewById(R.id.start_service));
+        start_service.setVisibility(View.GONE);
         start_service.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -170,7 +182,11 @@ public class BluetoothServerActivity extends Activity implements OnClickListener
             } else if (Contents.CONNECT_SUCCESS.equals(action)) {
                 start_service.setText("服务已开启");
             } else if (Contents.COMMAND_CODE.equals(action)) {
+                //ble蓝牙
                 String commands = intent.getStringExtra(Contents.KEY_BLE);
+                lists.add(commands);
+                adapter.notifyDataSetChanged();
+                lv.setSelection(lists.size() - 1);
                 playVoice(commands);
             } else if (Contents.TYPE_BLE.equals(action)) {
                 //ble
@@ -200,11 +216,13 @@ public class BluetoothServerActivity extends Activity implements OnClickListener
                 code = 10;
             }*/
         }
+        lists.add(cmd);
+        adapter.notifyDataSetChanged();
+        lv.setSelection(lists.size() - 1);
         playVoice(cmd);
         BoxDataUtils.getData(cmd, new BoxDataUtils.DataCallBack() {
             @Override
             public void onSuccess(final String version) {
-                command.setText("");
                 Log.e("YJL", "version==" + version);
                             /*如果是明文或者密文指令*/
                 if ("2A".equals(version)) {
@@ -219,19 +237,25 @@ public class BluetoothServerActivity extends Activity implements OnClickListener
                         stringBuilder = new StringBuilder();
                     }
                 } else {
-                    if (!cmd.startsWith("F5") && !cmd.startsWith("F0")) {
+                    if (!Contents.play_KeyMi || !Contents.play_KeyMing) {
                         //查看是否明文密文指令
                         command.setText("");
                     }
                     resultBuilder.append(version);
                     stringBuilder = new StringBuilder();
                     String result = resultBuilder.toString();
-                    String strSW = resultBuilder.substring(resultBuilder.length() - 4);
-                    int pulSW = Integer.valueOf(strSW, 16);
-                    Log.e("YJL", "pulSw===" + pulSW);
-                    if (pulSW == 0x9000) {
+                    if (resultBuilder.length() >= 10) {
+                        String strSW = resultBuilder.substring(resultBuilder.length() - 4);
+                        int pulSW = Integer.valueOf(strSW, 16);
+                        Log.e("YJL", "pulSw===" + pulSW);
+//                    nRet == 0x6f00
                         boolean completion = BJCWUtil.judgeData(result);
                         if (completion) {
+                            if (pulSW == 0x9000) {
+                            } else {
+                                command.setText("" + pulSW);
+                            }
+//                        if (pulSW == 0x9000) {
                             if (blueOrWifi) {
                                 //true：blue  false：wifi
                                 AppConfig.getInstance().getmBluetoothChatUtil().write(BJCWUtil.StrToHex(result));
@@ -239,8 +263,9 @@ public class BluetoothServerActivity extends Activity implements OnClickListener
                                 AppConfig.getInstance().getSocketServerUtil().sendMessage(BJCWUtil.StrToHex(result));
                             }
                             resultBuilder = new StringBuilder();
-                        } else {
-                            resultBuilder = new StringBuilder();
+//                        } else {
+//                            resultBuilder = new StringBuilder();
+//                        }
                         }
                     }
                 }
@@ -260,29 +285,112 @@ public class BluetoothServerActivity extends Activity implements OnClickListener
         switch (s) {
             //获取版本指令
             case Contents.COMMAND_VERSION:
+                command.setText("");
                 break;
             //IC_接触卡指令
             case Contents.COMMAND_IC_CONTACT_1:
+                command.setText("");
+                if (!Contents.play_Contact) {
+                    setPlayVoice(1);
+                    MediaServiceManager.startService(BluetoothServerActivity.this, Contents.VOICE_BANKCARD1, null);
+                }
                 break;
             //IC_非接触卡指令
             case Contents.COMMAND_IC_NOCONTACT_1:
+                command.setText("");
+                if (!Contents.play_NoContact) {
+                    setPlayVoice(2);
+                    MediaServiceManager.startService(BluetoothServerActivity.this, Contents.VOICE_BANKCARD2, null);
+                }
                 break;
             //身份证指令
             case Contents.COMMAND_IDCARD_1:
-                break;
-            //指纹指令
-            case Contents.COMMAND_FINGER:
+                command.setText("");
+                if (!Contents.play_Idcard) {
+                    setPlayVoice(3);
+                    MediaServiceManager.startService(BluetoothServerActivity.this, Contents.VOICE_IDCARD, null);
+                }
                 break;
             //磁条卡指令
             case Contents.COMMAND_MAGNETIC:
+                command.setText("");
+                if (!Contents.play_Magnetic) {
+                    setPlayVoice(4);
+                    MediaServiceManager.startService(BluetoothServerActivity.this, Contents.VOICE_MAGNETIC, null);
+                }
                 break;
             //明文指令
             case Contents.COMMAND_PIN_PLAINTEXT:
+                command.setText("");
+                if (!Contents.play_KeyMing) {
+                    setPlayVoice(5);
+                    MediaServiceManager.startService(BluetoothServerActivity.this, Contents.VOICE_KEY, null);
+                }
                 break;
             //密文指令
             case Contents.COMMAND_PIN_CIPHERTEXT_1:
+                command.setText("");
+                if (!Contents.play_KeyMi) {
+                    setPlayVoice(6);
+                    MediaServiceManager.startService(BluetoothServerActivity.this, Contents.VOICE_KEY, null);
+                }
                 break;
 
+            //指纹指令
+            case Contents.COMMAND_FINGER:
+                command.setText("");
+                if (!Contents.play_Finger) {
+                    setPlayVoice(7);
+                    MediaServiceManager.startService(BluetoothServerActivity.this, Contents.VOICE_FINGER, null);
+                }
+                break;
+            case Contents.COMMAND_IC_END:
+                setPlayVoice(8);
+                break;
+            case Contents.COMMAND_IDCARD_2:
+                setPlayVoice(8);
+                break;
+
+        }
+    }
+
+    private void setPlayVoice(int type) {
+        Contents.play_Contact = false;
+        Contents.play_NoContact = false;
+        Contents.play_Idcard = false;
+        Contents.play_Magnetic = false;
+        Contents.play_KeyMing = false;
+        Contents.play_KeyMi = false;
+        Contents.play_Finger = false;
+        switch (type) {
+            case 1:
+                //接触
+                Contents.play_Contact = true;
+                break;
+            case 2:
+                //非接触
+                Contents.play_NoContact = true;
+                break;
+            case 3:
+                //身份证
+                Contents.play_Idcard = true;
+                break;
+            case 4:
+                //磁条卡
+                Contents.play_Magnetic = true;
+                break;
+            case 5:
+                //明文密码
+                Contents.play_KeyMing = true;
+                break;
+            case 6:
+                //密文密码
+                Contents.play_KeyMi = true;
+                break;
+            case 7:
+                //指纹
+                Contents.play_Finger = true;
+                break;
         }
     }
 
@@ -339,17 +447,20 @@ public class BluetoothServerActivity extends Activity implements OnClickListener
             Log.e("YJL", mBluetoothAdapter.getAddress() + mBluetoothAdapter.getName());
         }
         //设置蓝牙可见性
-//        if (mBluetoothAdapter.isEnabled()) {
-//            if (mBluetoothAdapter.getScanMode() !=
+        if (mBluetoothAdapter.isEnabled()) {
+            Log.e("YJL", "mode==" + mBluetoothAdapter.getScanMode());
+//            if (mBluetoothAdapter.getScanMode() ==
 //                    BluetoothAdapter.SCAN_MODE_CONNECTABLE_DISCOVERABLE) {
-//                Intent discoverableIntent = new Intent(
-//                        BluetoothAdapter.ACTION_REQUEST_DISCOVERABLE);
-//                discoverableIntent.putExtra(
-//                        BluetoothAdapter.EXTRA_DISCOVERABLE_DURATION, 300);
-//                startActivity(discoverableIntent);
-//                Log.e("YJL", mBluetoothAdapter.getAddress() + mBluetoothAdapter.getName());
+            setDiscoverableTimeout(300);
+            Intent intent1 = new Intent(BluetoothServerActivity.this, ClassicBluetoothService.class);
+            startService(intent1);
+            Intent intent2 = new Intent(BluetoothServerActivity.this, BleService.class);
+            startService(intent2);
+            Intent intent3 = new Intent(BluetoothServerActivity.this, WifiService.class);
+            startService(intent3);
+            Log.e("YJLs", mBluetoothAdapter.getAddress() + mBluetoothAdapter.getName());
 //            }
-//        }
+        }
 
     }
 
@@ -361,6 +472,12 @@ public class BluetoothServerActivity extends Activity implements OnClickListener
             if (resultCode == RESULT_OK) {
                 //后台修改蓝牙的可见性
                 setDiscoverableTimeout(300);
+                Intent intent1 = new Intent(BluetoothServerActivity.this, ClassicBluetoothService.class);
+                startService(intent1);
+                Intent intent2 = new Intent(BluetoothServerActivity.this, BleService.class);
+                startService(intent2);
+                Intent intent3 = new Intent(BluetoothServerActivity.this, WifiService.class);
+                startService(intent3);
             } else if (resultCode == RESULT_CANCELED) {
                 finish();
             }
@@ -397,14 +514,16 @@ public class BluetoothServerActivity extends Activity implements OnClickListener
         stopService(intent2);
         Intent intent3 = new Intent(BluetoothServerActivity.this, WifiService.class);
         stopService(intent3);
-        if (null != AppConfig.getInstance().getServer().getServices() || 0 == AppConfig.getInstance().getServer().getServices().size()) {
+        if (null != AppConfig.getInstance().getServer() && null != AppConfig.getInstance().getServer().getServices() && 0 != AppConfig.getInstance().getServer().getServices().size()) {
             AppConfig.getInstance().getServer().clearServices();
         }
-        AppConfig.getInstance().getServer().close();
+        if (null != AppConfig.getInstance().getServer())
+            AppConfig.getInstance().getServer().close();
         AppConfig.getInstance().getmBluetoothChatUtil().unregisterHandler();
         AppConfig.getInstance().getmBluetoothChatUtil().disconnect();
         AppConfig.getInstance().getSocketServerUtil().unregisterHandler();
         AppConfig.getInstance().getSocketServerUtil().disconnect();
+        MediaServiceManager.stopService(BluetoothServerActivity.this);
         super.onDestroy();
         Log.d(TAG, "onDestroy");
     }

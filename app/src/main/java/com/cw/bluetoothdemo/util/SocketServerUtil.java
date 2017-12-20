@@ -215,8 +215,11 @@ public class SocketServerUtil {
 
         public void cancel() {
             try {
-                mServer.close();
-                mSocket.close();
+                if (null != mServer) {
+                    mServer.close();
+                    if (null != mSocket)
+                        mSocket.close();
+                }
             } catch (IOException e) {
                 e.printStackTrace();
             }

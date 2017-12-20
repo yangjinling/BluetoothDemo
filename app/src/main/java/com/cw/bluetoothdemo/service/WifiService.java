@@ -30,7 +30,7 @@ public class WifiService extends Service {
                     String str = msg.obj.toString();
                     Contents.COMMAND_CURRENT = str;
                     Log.e("YJL", "str.length" + str.length());
-                    Toast.makeText(getApplicationContext(), "读成功" + str, Toast.LENGTH_SHORT).show();
+//                    Toast.makeText(getApplicationContext(), "读成功" + str, Toast.LENGTH_SHORT).show();
                     //TODO  此时应该将指令通过串口发出去并从串口中获取内容并传送给客户端
                     sendBroad(Contents.TYPE_WIFI, str);
                     break;

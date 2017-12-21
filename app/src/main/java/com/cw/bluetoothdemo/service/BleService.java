@@ -139,23 +139,30 @@ public class BleService extends Service {
                                                 stringBuilder = new StringBuilder();
                                             }
                                         } else {
-                                            if (!cmd.startsWith("F5") && cmd.startsWith("F0")) {
+                                            if (Contents.play_KeyMi || Contents.play_KeyMing) {
                                                 //查看是否明文密文指令
+                                            } else {
                                                 sendBroad(Contents.TYPE_BLE, "");
                                             }
+//                                            if (!cmd.startsWith("F5") && cmd.startsWith("F0")) {
+//                                                //查看是否明文密文指令
+//
+//                                            }
                                             stringBuilder = new StringBuilder();
                                             builder.append(s);
                                             Log.e("YJL", "服务器准备向客户端发送数据" + builder.toString().length());
-                                            String strSW = s.substring(s.length() - 4);
-                                            int pulSW = Integer.valueOf(strSW, 16);
-                                            Log.e("YJL", "pulSw===" + pulSW);
-                                            boolean completion = BJCWUtil.judgeData(builder.toString());
-                                            if (completion) {
-                                                dealDate(BJCWUtil.StrToHex(builder.toString().trim()), device, character);
-                                                if (pulSW == 0x9000) {
-                                                } else {
+                                            if (builder.length() >= 10) {
+                                                String strSW = s.substring(builder.length() - 4);
+                                                int pulSW = Integer.valueOf(strSW, 16);
+                                                Log.e("YJL", "pulSw===" + pulSW);
+                                                boolean completion = BJCWUtil.judgeData(builder.toString());
+                                                if (completion) {
+                                                    dealDate(BJCWUtil.StrToHex(builder.toString().trim()), device, character);
+                                                    sendBroad(Contents.TYPE_BLE, "" + pulSW);
                                                     builder = new StringBuilder();
                                                 }
+                                            } else {
+                                                builder = new StringBuilder();
                                             }
                                         }
                                     }

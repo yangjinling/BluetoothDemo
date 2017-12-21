@@ -47,7 +47,9 @@
         <activity android:name=".activity.BluetoothServerActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
+                <!--设置开机launcher，只需加以下两条-->
+                <!--<category android:name="android.intent.category.DEFAULT" />
+               <category android:name="android.intent.category.HOME" />-->
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>

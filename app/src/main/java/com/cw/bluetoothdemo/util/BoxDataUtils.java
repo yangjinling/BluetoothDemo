@@ -188,7 +188,7 @@ public class BoxDataUtils {
                     e.printStackTrace();
                     Log.e("YJL", "异常");
                     // CBApplication.closeSerialPort();
-                    AppConfig.getInstance().closeSerialPort();
+//                    AppConfig.getInstance().closeSerialPort();
                     mReadThread = null;
                     break;
                 }

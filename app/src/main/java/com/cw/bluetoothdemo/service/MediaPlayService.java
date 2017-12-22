@@ -41,7 +41,7 @@ public class MediaPlayService extends Service implements MediaPlayer.OnCompletio
 
     private void initMediaPlayer(String name) {
         try {
-            File file = new File(Environment.getExternalStorageDirectory().getPath() + "/Bluetooth/video",
+            File file = new File(Environment.getExternalStorageDirectory().getPath() + "/Bluetooth/Video",
                     name + ".wav");
             Log.e(TAG, "initMediaPlayer: " + file.getPath());
             mediaPlayer.setDataSource(file.getPath()); // 指定音频文件的路径

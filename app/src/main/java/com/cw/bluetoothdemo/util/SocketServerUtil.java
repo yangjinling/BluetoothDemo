@@ -128,7 +128,7 @@ public class SocketServerUtil {
                  * 实现数据循环接收
                  * */
                 while (!mmSocket.isClosed()) {
-                    Thread.sleep(1);
+                    Thread.sleep(10);
 //                    Log.e("YJLstate", "" + mmSocket.isClosed());
                     try {
                         if ((bytes = mmInStream.read(buffer)) > 0) {
@@ -189,7 +189,7 @@ public class SocketServerUtil {
                  * 接受请求
                  * */
                 while (true) {
-                    Thread.sleep(1);
+                    Thread.sleep(100);
                     mSocket = mServer.accept();
                     if (null != mSocket) {
                         connected(mSocket);

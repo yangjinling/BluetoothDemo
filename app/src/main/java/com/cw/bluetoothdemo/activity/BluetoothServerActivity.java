@@ -3,6 +3,9 @@ package com.cw.bluetoothdemo.activity;
 import android.app.Activity;
 import android.app.ProgressDialog;
 import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothDevice;
+import android.bluetooth.BluetoothGattCharacteristic;
+import android.bluetooth.BluetoothGattServer;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -48,6 +51,8 @@ public class BluetoothServerActivity extends Activity {
     private ListView lv;
     private List<String> lists = new ArrayList<>();
     private ArrayAdapter<String> adapter;
+    private String cmd;
+    private BluetoothDevice mDevice;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -65,11 +70,11 @@ public class BluetoothServerActivity extends Activity {
     private void register() {
         Log.e("YJL", "注册方法");
         IntentFilter filter = new IntentFilter();
-        filter.addAction(Contents.TYPE_BLUE);
         filter.addAction(Contents.CONNECT_FAIL);
         filter.addAction(Contents.CONNECT_SUCCESS);
+        filter.addAction(Contents.TYPE_BLUE);
         filter.addAction(Contents.TYPE_BLE);
-        filter.addAction(Contents.COMMAND_CODE);
+//        filter.addAction(Contents.COMMAND_CODE);
         filter.addAction(Contents.TYPE_WIFI);
         registerReceiver(receiver, filter);
     }
@@ -96,36 +101,43 @@ public class BluetoothServerActivity extends Activity {
             String action = intent.getAction();
             if (Contents.TYPE_BLUE.equals(action)) {
                 //经典蓝牙
-                sendMessageBySerialPortOrWifi(intent, true);
+                dealMessage(intent, true, false);
             } else if (Contents.CONNECT_FAIL.equals(action)) {
                 Toast.makeText(getApplicationContext(), "服务开启失败，请重新开启", Toast.LENGTH_SHORT).show();
             } else if (Contents.CONNECT_SUCCESS.equals(action)) {
                 Toast.makeText(getApplicationContext(), "服务已开启", Toast.LENGTH_SHORT).show();
             } else if (Contents.COMMAND_CODE.equals(action)) {
                 //ble蓝牙接收到指令显示在页面并语音播报
-                String commands = intent.getStringExtra(Contents.KEY_BLE);
-                lists.add(commands);
-                adapter.notifyDataSetChanged();
-                lv.setSelection(lists.size() - 1);
-                playVoice(commands);
+//                String commands = intent.getStringExtra(Contents.KEY_BLE);
+//                lists.add(commands);
+//                adapter.notifyDataSetChanged();
+//                lv.setSelection(lists.size() - 1);
+//                playVoice(commands);
             } else if (Contents.TYPE_BLE.equals(action)) {
                 //ble明文密文数字键动态显示或者非9000
-                String commands = intent.getStringExtra(Contents.KEY_BLE);
-                command.setText(commands);
+//                String commands = intent.getStringExtra(Contents.KEY_BLE);
+//                command.setText(commands);
+                dealMessage(intent, true, true);
             } else if (Contents.TYPE_WIFI.equals(action)) {
                 //wifi
-                sendMessageBySerialPortOrWifi(intent, false);
+                dealMessage(intent, false, false);
             }
         }
     };
-    private String cmd;
-
     /*播放语音，串口发送接收并返回结果*/
-    void sendMessageBySerialPortOrWifi(final Intent intent, final boolean blueOrWifi) {
+    private void dealMessage(final Intent intent, boolean blueOrWifi, boolean ble) {
         if (blueOrWifi) {
-            //true：blue  false：wifi
-            cmd = intent.getStringExtra(Contents.KEY_BLUE);
+            //true：蓝牙  false：wifi
+            if (ble) {
+                //true ble蓝牙
+                cmd = intent.getStringExtra(Contents.KEY_BLE);
+                mDevice = intent.getParcelableExtra(Contents.KEY_DEVICE);
+            } else {
+                //false  经典蓝牙
+                cmd = intent.getStringExtra(Contents.KEY_BLUE);
+            }
         } else {
+            //wifi
             cmd = intent.getStringExtra(Contents.KEY_WIFI);
         }
         lists.add(cmd);
@@ -133,7 +145,12 @@ public class BluetoothServerActivity extends Activity {
         lv.setSelection(lists.size() - 1);
         //播放语音
         playVoice(cmd);
-        //串口发送指令
+        //串口发送指令并处理
+        sendMessagBySerialPort(cmd, blueOrWifi, ble);
+    }
+
+    /*串口发送指令*/
+    private void sendMessagBySerialPort(final String cmd, final boolean blueOrWifi, final boolean ble) {
         BoxDataUtils.getData(cmd, new BoxDataUtils.DataCallBack() {
             @Override
             public void onSuccess(final String data) {
@@ -170,31 +187,74 @@ public class BluetoothServerActivity extends Activity {
                         boolean completion = BJCWUtil.judgeData(result);
                         if (completion) {
                                 /*状态码显示*/
-                            command.setText("" + pulSW);
+                            command.setText("" + strSW);
                             if (blueOrWifi) {
-                                //true：blue
-                                AppConfig.getInstance().getmBluetoothChatUtil().write(BJCWUtil.StrToHex(result));
+                                //true：蓝牙
+                                if (ble) {
+                                    //true ble蓝牙
+                                    if (null != mDevice)
+                                        dealDate(BJCWUtil.StrToHex(result), mDevice, AppConfig.getInstance().getCharacter(), AppConfig.getInstance().getServer());
+                                } else {
+                                    //false 经典蓝牙
+                                    AppConfig.getInstance().getmBluetoothChatUtil().write(BJCWUtil.StrToHex(result));
+                                }
                             } else {
 //                                false：wifi
                                 AppConfig.getInstance().getSocketServerUtil().sendMessage(BJCWUtil.StrToHex(result));
                             }
                             resultBuilder = new StringBuilder();
                         } else {
+//                            数据不完整，重新发送
                             resultBuilder = new StringBuilder();
+                            sendMessagBySerialPort(cmd, blueOrWifi, ble);
                         }
                     } else {
+                        //数据长度不正确重新发送
                         resultBuilder = new StringBuilder();
+                        //重发
+                        sendMessagBySerialPort(cmd, blueOrWifi, ble);
                     }
                 }
             }
 
             @Override
             public void onFail() {
-
+                // //重发
+                resultBuilder = new StringBuilder();
+                sendMessagBySerialPort(cmd, blueOrWifi, ble);
             }
         });
+    }
+
+    /*ble蓝牙分包处理发送*/
+    public void dealDate(byte[] data, final BluetoothDevice mDevice,
+                         BluetoothGattCharacteristic character, BluetoothGattServer server) {
+        if (data != null) {
+            int index = 0;
+            do {
+                try {
+                    byte[] surplusData = new byte[data.length - index];
+                    byte[] currentData;
+                    System.arraycopy(data, index, surplusData, 0, data.length - index);
+                    if (surplusData.length <= 20) {
+                        currentData = new byte[surplusData.length];
+                        System.arraycopy(surplusData, 0, currentData, 0, surplusData.length);
+                        index += surplusData.length;
+                    } else {
+                        currentData = new byte[20];
+                        System.arraycopy(data, index, currentData, 0, 20);
+                        index += 20;
+                    }
+                    Thread.sleep(100);
+                    character.setValue(currentData);
+                    server.notifyCharacteristicChanged(mDevice, character, false);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
 
 
+            } while (index < data.length);
+        }
     }
 
     /*设置语音播放内容*/
@@ -395,6 +455,7 @@ public class BluetoothServerActivity extends Activity {
         AppConfig.getInstance().getSocketServerUtil().unregisterHandler();
         AppConfig.getInstance().getSocketServerUtil().disconnect();
         MediaServiceManager.stopService(BluetoothServerActivity.this);
+        AppConfig.getInstance().closeSerialPort();
         super.onDestroy();
         Log.d(TAG, "onDestroy");
     }

@@ -9,8 +9,9 @@ public class Contents {
     public final static String TYPE_WIFI = "READ_WIFI";//WIFI接收到客户端发来的指令
     public final static String KEY_BLUE = "DATA_BLUE";//蓝牙接收到客户端发来指令的键值
     public final static String KEY_WIFI = "DATA_WIFI";//WIFI接收到客户端发来指令的键值
-    public final static String TYPE_BLE = "TYPE_BLE";
+    public final static String TYPE_BLE = "READ_BLE";
     public final static String KEY_BLE = "DATA_BLE";//
+    public final static String KEY_DEVICE = "DATA_DEVICE";//
     public final static String COMMAND_CODE = "COMMAND_CODE";
     public final static String CONNECT_SUCCESS = "SUCCESS";//服务开启成功
     public final static String CONNECT_FAIL = "FAIL";//服务开启失败
@@ -25,7 +26,7 @@ public class Contents {
     //IC_非接触卡指令
     public final static String COMMAND_IC_NOCONTACT_1 = "EE0011FB80101400000A62000000000000000000";
 
-    public final static String COMMAND_IC_END="F80007810005000000";
+    public final static String COMMAND_IC_END = "F80007810005000000";
     //身份证指令
     public final static String COMMAND_IDCARD_1 = "F80007FB801114000000";
     public final static String COMMAND_IDCARD_2 = "F80007FB810005000000";

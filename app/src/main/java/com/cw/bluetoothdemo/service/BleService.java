@@ -15,6 +15,7 @@ import android.os.IBinder;
 import android.os.Message;
 import android.support.annotation.IntDef;
 import android.support.annotation.Nullable;
+import android.support.v4.app.NavUtils;
 import android.text.InputFilter;
 import android.text.TextUtils;
 import android.util.Log;
@@ -107,71 +108,58 @@ public class BleService extends Service {
                         cmd = BJCWUtil.HexTostr(value, value.length);
                         builder = new StringBuilder();
                         Contents.COMMAND_CURRENT = cmd;
-                       /* if (cmd.startsWith("0")) {
-                            code = Integer.parseInt(cmd.substring(0, 2));
-                            cmd = cmd.substring(2);
-                        } else {
-                            code = 10;
-                        }*/
                         Log.e("YJL", "客户端发过来的数据:+commandlength===" + cmd.length() + "客户端发过来的数据:+command===" + cmd);
                         mHandler.post(new Runnable() {
                             @Override
                             public void run() {
-                               /* if (code != 10) {
-                                    sendBroad(Contents.TYPE_BLE, code);
-                                }*/
-                                sendBroad(Contents.COMMAND_CODE, cmd);
-                                BoxDataUtils.getData(cmd/*.substring(2)*/, new BoxDataUtils.DataCallBack() {
-                                    @Override
-                                    public void onSuccess(String s) {
-                                        if ("2A".equals(s)) {
-                                            Log.e("YJL", "s==" + s + BJCWUtil.StrToHex("2A") + new String(BJCWUtil.StrToHex("2A")));
-                                            stringBuilder.append(new String(BJCWUtil.StrToHex(s)));
-                                            sendBroad(Contents.TYPE_BLE, stringBuilder.toString());
-                                        } else if ("08".equals(s)) {
-                                            Log.e("YJL", "s==" + s);
-                                            if (stringBuilder.toString().length() > 0) {
-                                                String result = stringBuilder.toString().substring(0, stringBuilder.toString().length() - 1);
-                                                sendBroad(Contents.TYPE_BLE, result);
-                                                stringBuilder = new StringBuilder();
-                                                stringBuilder.append(result);
-                                            } else {
-                                                stringBuilder = new StringBuilder();
-                                            }
-                                        } else {
-                                            if (Contents.play_KeyMi || Contents.play_KeyMing) {
-                                                //查看是否明文密文指令
-                                            } else {
-                                                sendBroad(Contents.TYPE_BLE, "");
-                                            }
-//                                            if (!cmd.startsWith("F5") && cmd.startsWith("F0")) {
-//                                                //查看是否明文密文指令
-//
+                                sendBroad(Contents.TYPE_BLE, cmd, device);
+//                                BoxDataUtils.getData(cmd, new BoxDataUtils.DataCallBack() {
+//                                    @Override
+//                                    public void onSuccess(String s) {
+//                                        if ("2A".equals(s)) {
+//                                            Log.e("YJL", "s==" + s + BJCWUtil.StrToHex("2A") + new String(BJCWUtil.StrToHex("2A")));
+//                                            stringBuilder.append(new String(BJCWUtil.StrToHex(s)));
+//                                            sendBroad(Contents.TYPE_BLE, stringBuilder.toString(),device);
+//                                        } else if ("08".equals(s)) {
+//                                            Log.e("YJL", "s==" + s);
+//                                            if (stringBuilder.toString().length() > 0) {
+//                                                String result = stringBuilder.toString().substring(0, stringBuilder.toString().length() - 1);
+//                                                sendBroad(Contents.TYPE_BLE, result,device);
+//                                                stringBuilder = new StringBuilder();
+//                                                stringBuilder.append(result);
+//                                            } else {
+//                                                stringBuilder = new StringBuilder();
 //                                            }
-                                            stringBuilder = new StringBuilder();
-                                            builder.append(s);
-                                            Log.e("YJL", "服务器准备向客户端发送数据" + builder.toString().length());
-                                            if (builder.length() >= 10) {
-                                                String strSW = s.substring(builder.length() - 4);
-                                                int pulSW = Integer.valueOf(strSW, 16);
-                                                Log.e("YJL", "pulSw===" + pulSW);
-                                                boolean completion = BJCWUtil.judgeData(builder.toString());
-                                                if (completion) {
-                                                    dealDate(BJCWUtil.StrToHex(builder.toString().trim()), device, character);
-                                                    sendBroad(Contents.TYPE_BLE, "" + pulSW);
-                                                    builder = new StringBuilder();
-                                                }
-                                            } else {
-                                                builder = new StringBuilder();
-                                            }
-                                        }
-                                    }
-
-                                    @Override
-                                    public void onFail() {
-
-                                    }
-                                });
+//                                        } else {
+//                                            if (Contents.play_KeyMi || Contents.play_KeyMing) {
+//                                                //查看是否明文密文指令
+//                                            } else {
+//                                                sendBroad(Contents.TYPE_BLE, "",device);
+//                                            }
+//                                            stringBuilder = new StringBuilder();
+//                                            builder.append(s);
+//                                            Log.e("YJL", "服务器准备向客户端发送数据" + builder.toString().length());
+//                                            if (builder.length() >= 10) {
+//                                                String strSW = s.substring(builder.length() - 4);
+//                                                int pulSW = Integer.valueOf(strSW, 16);
+//                                                Log.e("YJL", "pulSw===" + pulSW);
+//                                                boolean completion = BJCWUtil.judgeData(builder.toString());
+//                                                if (completion) {
+//                                                    dealDate(BJCWUtil.StrToHex(builder.toString().trim()), device, character);
+//                                                    sendBroad(Contents.TYPE_BLE, "" + strSW,device);
+//                                                    builder = new StringBuilder();
+//                                                }
+//                                            } else {
+//                                                builder = new StringBuilder();
+//                                            }
+//                                        }
+//                                    }
+//
+//                                    @Override
+//                                    public void onFail() {
+//
+//                                    }
+//                                });
                             }
                         });
                     }
@@ -242,13 +230,14 @@ public class BleService extends Service {
     }
 
     private void sendBroad(String action) {
-        sendBroad(action, null);
+        sendBroad(action, null, null);
     }
 
-    private void sendBroad(String action, String string) {
+    private void sendBroad(String action, String string, BluetoothDevice mDevice) {
         Intent intent = new Intent(action);
-        if (!TextUtils.isEmpty(string)) {
+        if (!TextUtils.isEmpty(string) && null != mDevice) {
             intent.putExtra(Contents.KEY_BLE, string);
+            intent.putExtra(Contents.KEY_DEVICE, mDevice);
         }
         sendBroadcast(intent);
     }

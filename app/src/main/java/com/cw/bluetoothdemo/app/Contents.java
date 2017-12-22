@@ -36,7 +36,7 @@ public class Contents {
     public final static String COMMAND_MAGNETIC = "F80007FB800014000000";
     //明文指令
     public final static String COMMAND_PIN_PLAINTEXT = "F5000AFB802314000003000001";
-    //密文指令
+    //密文指令第一条
     public final static String COMMAND_PIN_CIPHERTEXT_1 = "F0000FFB8025140000080000000000000000";
 
     //当前接收到手机端的指令

@@ -19,6 +19,7 @@ import android.view.View.OnClickListener;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -53,6 +54,8 @@ public class BluetoothServerActivity extends Activity {
     private ArrayAdapter<String> adapter;
     private String cmd;
     private BluetoothDevice mDevice;
+    private LinearLayout prograss;
+    private TextView prograss_tv;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -62,19 +65,26 @@ public class BluetoothServerActivity extends Activity {
         stringBuilder = new StringBuilder();
         resultBuilder = new StringBuilder();
         adapter = new ArrayAdapter<String>(this, R.layout.list_item, lists);
+        //初始化控件
         initView();
+        //初始化蓝牙
         initBluetooth();
+        //注册广播且处理数据
         register();
     }
 
     private void register() {
         Log.e("YJL", "注册方法");
         IntentFilter filter = new IntentFilter();
+        //服务开启失败
         filter.addAction(Contents.CONNECT_FAIL);
+        //服务开启成功
         filter.addAction(Contents.CONNECT_SUCCESS);
+        //经典蓝牙
         filter.addAction(Contents.TYPE_BLUE);
+        //ble蓝牙
         filter.addAction(Contents.TYPE_BLE);
-//        filter.addAction(Contents.COMMAND_CODE);
+        //wifi
         filter.addAction(Contents.TYPE_WIFI);
         registerReceiver(receiver, filter);
     }
@@ -93,30 +103,23 @@ public class BluetoothServerActivity extends Activity {
             }
         });
         command = ((TextView) findViewById(R.id.command));
+        prograss = ((LinearLayout) findViewById(R.id.layout_prograss));
+        prograss_tv = ((TextView) findViewById(R.id.prograss_tv));
     }
 
     private BroadcastReceiver receiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, final Intent intent) {
             String action = intent.getAction();
-            if (Contents.TYPE_BLUE.equals(action)) {
-                //经典蓝牙
-                dealMessage(intent, true, false);
-            } else if (Contents.CONNECT_FAIL.equals(action)) {
+            if (Contents.CONNECT_FAIL.equals(action)) {
                 Toast.makeText(getApplicationContext(), "服务开启失败，请重新开启", Toast.LENGTH_SHORT).show();
             } else if (Contents.CONNECT_SUCCESS.equals(action)) {
                 Toast.makeText(getApplicationContext(), "服务已开启", Toast.LENGTH_SHORT).show();
-            } else if (Contents.COMMAND_CODE.equals(action)) {
-                //ble蓝牙接收到指令显示在页面并语音播报
-//                String commands = intent.getStringExtra(Contents.KEY_BLE);
-//                lists.add(commands);
-//                adapter.notifyDataSetChanged();
-//                lv.setSelection(lists.size() - 1);
-//                playVoice(commands);
+            } else if (Contents.TYPE_BLUE.equals(action)) {
+                //经典蓝牙
+                dealMessage(intent, true, false);
             } else if (Contents.TYPE_BLE.equals(action)) {
-                //ble明文密文数字键动态显示或者非9000
-//                String commands = intent.getStringExtra(Contents.KEY_BLE);
-//                command.setText(commands);
+                //ble蓝牙
                 dealMessage(intent, true, true);
             } else if (Contents.TYPE_WIFI.equals(action)) {
                 //wifi
@@ -124,7 +127,12 @@ public class BluetoothServerActivity extends Activity {
             }
         }
     };
-    /*播放语音，串口发送接收并返回结果*/
+
+    /**
+     * 播放语音，串口发送接收并返回结果
+     * blueOrWifi:蓝牙或wifi
+     * ble:经典蓝牙或ble蓝牙
+     */
     private void dealMessage(final Intent intent, boolean blueOrWifi, boolean ble) {
         if (blueOrWifi) {
             //true：蓝牙  false：wifi
@@ -143,13 +151,18 @@ public class BluetoothServerActivity extends Activity {
         lists.add(cmd);
         adapter.notifyDataSetChanged();
         lv.setSelection(lists.size() - 1);
-        //播放语音
+        //播放语音，根据指令设置
         playVoice(cmd);
         //串口发送指令并处理
         sendMessagBySerialPort(cmd, blueOrWifi, ble);
     }
 
-    /*串口发送指令*/
+    /**
+     * 串口发送指令
+     * cmd：指令
+     * blueOrWifi：蓝牙或者wifi
+     * ble：经典蓝牙或者ble蓝牙
+     */
     private void sendMessagBySerialPort(final String cmd, final boolean blueOrWifi, final boolean ble) {
         BoxDataUtils.getData(cmd, new BoxDataUtils.DataCallBack() {
             @Override
@@ -158,10 +171,22 @@ public class BluetoothServerActivity extends Activity {
                             /*如果是明文或者密文指令*/
                 if ("2A".equals(data)) {
                     /*数字键*/
+                    if (Contents.play_KeyMi) {
+                        Contents.play_KeyMi = false;
+                    } else if (Contents.play_KeyMing) {
+                        Contents.play_KeyMing = false;
+                    }
+                    prograss.setVisibility(View.GONE);
                     stringBuilder.append(new String(BJCWUtil.StrToHex(data)));
                     command.setText(stringBuilder.toString());
                 } else if ("08".equals(data)) {
                     /*清除键*/
+                    if (Contents.play_KeyMi) {
+                        Contents.play_KeyMi = false;
+                    } else if (Contents.play_KeyMing) {
+                        Contents.play_KeyMing = false;
+                    }
+                    prograss.setVisibility(View.GONE);
                     if (stringBuilder.toString().length() > 0) {
                         command.setText(stringBuilder.toString().substring(0, stringBuilder.toString().length() - 1));
                         stringBuilder = new StringBuilder();
@@ -186,7 +211,9 @@ public class BluetoothServerActivity extends Activity {
                         /*判断数据是否完整*/
                         boolean completion = BJCWUtil.judgeData(result);
                         if (completion) {
-                                /*状态码显示*/
+                            //设置当前prograss是否隐藏
+                            setPrograssShow();
+                            /*状态码显示*/
                             command.setText("" + strSW);
                             if (blueOrWifi) {
                                 //true：蓝牙
@@ -219,14 +246,18 @@ public class BluetoothServerActivity extends Activity {
 
             @Override
             public void onFail() {
-                // //重发
+                //重发
                 resultBuilder = new StringBuilder();
                 sendMessagBySerialPort(cmd, blueOrWifi, ble);
             }
         });
     }
 
-    /*ble蓝牙分包处理发送*/
+    /**
+     * ble蓝牙分包处理发送
+     * data：完整的包数据
+     * mDevice：蓝牙设备
+     */
     public void dealDate(byte[] data, final BluetoothDevice mDevice,
                          BluetoothGattCharacteristic character, BluetoothGattServer server) {
         if (data != null) {
@@ -257,18 +288,24 @@ public class BluetoothServerActivity extends Activity {
         }
     }
 
-    /*设置语音播放内容*/
+    /**
+     * 根据指令类型设置语音播放内容
+     */
     private void playVoice(String s) {
         Log.e("YJL", "command===" + s);
         switch (s) {
             //获取版本指令
             case Contents.COMMAND_VERSION:
                 command.setText("");
+                prograss.setVisibility(View.VISIBLE);
+                prograss_tv.setText("获取固件版本");
                 break;
             //IC_接触卡指令
             case Contents.COMMAND_IC_CONTACT_1:
                 command.setText("");
                 if (!Contents.play_Contact) {
+                    prograss.setVisibility(View.VISIBLE);
+                    prograss_tv.setText("请插卡");
                     setPlayVoice(1);
                     MediaServiceManager.startService(BluetoothServerActivity.this, Contents.VOICE_BANKCARD1, null);
                 }
@@ -277,6 +314,8 @@ public class BluetoothServerActivity extends Activity {
             case Contents.COMMAND_IC_NOCONTACT_1:
                 command.setText("");
                 if (!Contents.play_NoContact) {
+                    prograss.setVisibility(View.VISIBLE);
+                    prograss_tv.setText("请挥卡");
                     setPlayVoice(2);
                     MediaServiceManager.startService(BluetoothServerActivity.this, Contents.VOICE_BANKCARD2, null);
                 }
@@ -285,6 +324,8 @@ public class BluetoothServerActivity extends Activity {
             case Contents.COMMAND_IDCARD_1:
                 command.setText("");
                 if (!Contents.play_Idcard) {
+                    prograss.setVisibility(View.VISIBLE);
+                    prograss_tv.setText("请放身份证");
                     setPlayVoice(3);
                     MediaServiceManager.startService(BluetoothServerActivity.this, Contents.VOICE_IDCARD, null);
                 }
@@ -293,6 +334,8 @@ public class BluetoothServerActivity extends Activity {
             case Contents.COMMAND_MAGNETIC:
                 command.setText("");
                 if (!Contents.play_Magnetic) {
+                    prograss.setVisibility(View.VISIBLE);
+                    prograss_tv.setText("请刷磁条卡");
                     setPlayVoice(4);
                     MediaServiceManager.startService(BluetoothServerActivity.this, Contents.VOICE_MAGNETIC, null);
                 }
@@ -301,6 +344,8 @@ public class BluetoothServerActivity extends Activity {
             case Contents.COMMAND_PIN_PLAINTEXT:
                 command.setText("");
                 if (!Contents.play_KeyMing) {
+                    prograss.setVisibility(View.VISIBLE);
+                    prograss_tv.setText("请按键");
                     setPlayVoice(5);
                     MediaServiceManager.startService(BluetoothServerActivity.this, Contents.VOICE_KEY, null);
                 }
@@ -309,6 +354,9 @@ public class BluetoothServerActivity extends Activity {
             case Contents.COMMAND_PIN_CIPHERTEXT_1:
                 command.setText("");
                 if (!Contents.play_KeyMi) {
+                    Contents.COMMAND_CURRENT = Contents.COMMAND_PIN_CIPHERTEXT_1;
+                    prograss.setVisibility(View.VISIBLE);
+                    prograss_tv.setText("请按键");
                     setPlayVoice(6);
                     MediaServiceManager.startService(BluetoothServerActivity.this, Contents.VOICE_KEY, null);
                 }
@@ -318,6 +366,8 @@ public class BluetoothServerActivity extends Activity {
             case Contents.COMMAND_FINGER:
                 command.setText("");
                 if (!Contents.play_Finger) {
+                    prograss.setVisibility(View.VISIBLE);
+                    prograss_tv.setText("请按指纹");
                     setPlayVoice(7);
                     MediaServiceManager.startService(BluetoothServerActivity.this, Contents.VOICE_FINGER, null);
                 }
@@ -325,16 +375,50 @@ public class BluetoothServerActivity extends Activity {
             //执行刷卡结束的指令后播放标记置为false
             case Contents.COMMAND_IC_END:
                 setPlayVoice(8);
+
                 break;
             //执行身份证结束的指令后播放标记置为false
             case Contents.COMMAND_IDCARD_2:
                 setPlayVoice(8);
                 break;
-
         }
     }
 
-    /*设置语音播放是否完成的标记*/
+    /**
+     * 控制设置prograss显示
+     */
+    private void setPrograssShow() {
+        if (Contents.COMMAND_CURRENT.equals(Contents.COMMAND_PIN_CIPHERTEXT_1)) {
+            //密文指令第一条不做任何处理
+        } else if (Contents.COMMAND_CURRENT.equals(Contents.COMMAND_IC_END)
+                || Contents.COMMAND_CURRENT.equals(Contents.COMMAND_IDCARD_2)
+                || Contents.COMMAND_CURRENT.equals(Contents.COMMAND_VERSION)) {
+            //身份证最后一条指令/刷卡最后一条指令/获取版本
+            prograss.setVisibility(View.GONE);
+        } else {
+            if (Contents.play_Magnetic) {
+                prograss.setVisibility(View.GONE);
+                Contents.play_Magnetic = false;
+            }
+            if (Contents.play_Finger) {
+                prograss.setVisibility(View.GONE);
+                Contents.play_Finger = false;
+            }
+            if (Contents.play_KeyMi) {
+                prograss.setVisibility(View.GONE);
+                Contents.play_KeyMi = false;
+            }
+            if (Contents.play_KeyMing) {
+                prograss.setVisibility(View.GONE);
+                Contents.play_KeyMing = false;
+            }
+        }
+    }
+
+
+    /**
+     * 设置语音播放是否完成的标记
+     */
     private void setPlayVoice(int type) {
         Contents.play_Contact = false;
         Contents.play_NoContact = false;
@@ -375,7 +459,9 @@ public class BluetoothServerActivity extends Activity {
         }
     }
 
-    /*初始化蓝牙设备*/
+    /**
+     * 初始化蓝牙设备
+     */
     private void initBluetooth() {
         mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
         if (mBluetoothAdapter == null) {//设备不支持蓝牙
@@ -461,7 +547,9 @@ public class BluetoothServerActivity extends Activity {
     }
 
 
-    /*开启的可见性，还有个附件的属性，timeout值并没有起到作用，可见性是一直保持的*/
+    /**
+     * 开启的可见性，还有个附件的属性，timeout值并没有起到作用，可见性是一直保持的
+     */
     public void setDiscoverableTimeout(int timeout) {
         try {
             Method setDiscoverableTimeout = BluetoothAdapter.class.getMethod("setDiscoverableTimeout", int.class);
@@ -475,7 +563,9 @@ public class BluetoothServerActivity extends Activity {
         }
     }
 
-    /*关闭可见性*/
+    /**
+     * 关闭可见性
+     */
     public void closeDiscoverableTimeout() {
         try {
             Method setDiscoverableTimeout = BluetoothAdapter.class.getMethod("setDiscoverableTimeout", int.class);

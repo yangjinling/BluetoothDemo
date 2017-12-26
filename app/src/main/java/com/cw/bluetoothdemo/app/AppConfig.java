@@ -12,6 +12,7 @@ import com.cw.bluetoothdemo.connection.SerialConnection;
 import com.cw.bluetoothdemo.util.BluetoothChatUtil;
 import com.cw.bluetoothdemo.util.SocketServerUtil;
 import com.skzh.iot.SerialPort;
+import com.wellcom.finger.FpDriverV12;
 
 /**
  * Created by yangjinling on 2017/11/29.
@@ -31,6 +32,8 @@ public class AppConfig {
     private BluetoothGattCharacteristic character;
     private BluetoothGattService service;
     private SocketServerUtil socketServerUtil;
+    private FpDriverV12 mIFpDevDriver;
+
     private AppConfig() {
     }
 
@@ -47,6 +50,14 @@ public class AppConfig {
             }
         }
         return mAppConfig;
+    }
+
+    public FpDriverV12 getmIFpDevDriver() {
+        return mIFpDevDriver;
+    }
+
+    public void setmIFpDevDriver(FpDriverV12 mIFpDevDriver) {
+        this.mIFpDevDriver = mIFpDevDriver;
     }
 
     public SocketServerUtil getSocketServerUtil() {

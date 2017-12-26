@@ -31,14 +31,19 @@ public class Contents {
     public final static String COMMAND_IDCARD_1 = "F80007FB801114000000";
     public final static String COMMAND_IDCARD_2 = "F80007FB810005000000";
     //指纹指令
-    public final static String COMMAND_FINGER = "F80007FB803414000000";
+//    public final static String COMMAND_FINGER = "F80007FB803414000000";
     //磁条卡指令
     public final static String COMMAND_MAGNETIC = "F80007FB800014000000";
     //明文指令
     public final static String COMMAND_PIN_PLAINTEXT = "F5000AFB802314000003000001";
     //密文指令第一条
     public final static String COMMAND_PIN_CIPHERTEXT_1 = "F0000FFB8025140000080000000000000000";
-
+    //指纹获取版本
+    public final static String COMMAND_FINGER_VERSION = "08";
+    //指纹获取特征
+    public final static String COMMAND_FINGER_FEATURE = "09";
+    //指纹获取模板
+    public final static String COMMAND_FINGER_MODE = "10";
     //当前接收到手机端的指令
     public static String COMMAND_CURRENT = "";
 

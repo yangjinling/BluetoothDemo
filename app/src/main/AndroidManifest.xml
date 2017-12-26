@@ -31,6 +31,8 @@
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
     <!-- 允许应用程序完全使用网络 -->
     <uses-permission android:name="android.permission.INTERNET" />
+    <!--指纹usb权限-->
+    <uses-feature android:name="android.hardware.usb.host"  android:required="true" />
 
     <application
         android:name=".app.MyApplication"
@@ -52,6 +54,9 @@
                <category android:name="android.intent.category.HOME" />-->
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+            <meta-data
+                android:name="android.hardware.usb.action.USB_DEVICE_ATTACHED"
+                android:resource="@xml/device_filter"></meta-data>
         </activity>
         <activity android:name=".activity.WifiServerActivity" />
 

@@ -11,6 +11,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Bundle;
+import android.os.Environment;
 import android.os.Handler;
 import android.os.Message;
 import android.util.Log;
@@ -34,6 +35,7 @@ import com.cw.bluetoothdemo.util.BJCWUtil;
 import com.cw.bluetoothdemo.util.BluetoothChatUtil;
 import com.cw.bluetoothdemo.app.Contents;
 import com.cw.bluetoothdemo.util.BoxDataUtils;
+import com.wellcom.finger.FpDriverV12;
 
 import java.io.BufferedReader;
 import java.lang.reflect.Method;
@@ -56,6 +58,59 @@ public class BluetoothServerActivity extends Activity {
     private BluetoothDevice mDevice;
     private LinearLayout prograss;
     private TextView prograss_tv;
+    public static final String sBmpFile = Environment.getExternalStorageDirectory() + "/finger_wl.bmp";
+    private FpDriverV12 mIFpDevDriver;
+    private String mb;
+    private String tz;
+    private Handler handler = new Handler() {
+        @Override
+        public void handleMessage(Message msg) {
+            super.handleMessage(msg);
+            String[] arrRet;
+            switch (msg.what) {
+                case 0:
+                    arrRet = (String[]) msg.obj;
+                    if (arrRet[0].equals("0")) {
+                        prograss.setVisibility(View.GONE);
+                        Contents.play_Finger = false;
+                        dealFingerData(arrRet[1] + "9000");
+                        Log.e("YJL", "version==" + arrRet[1]);
+                    } else {
+//                        tv_version.setText("");
+                        Log.e("YJL", "version==失败");
+                    }
+                    break;
+                case 1:
+                    //模板
+                    arrRet = (String[]) msg.obj;
+                    if (arrRet[0].equals("0")) {
+                        prograss.setVisibility(View.GONE);
+                        Contents.play_Finger = false;
+                        mb = arrRet[1];
+                        Log.e("YJL", "mb===" + mb);
+                        dealFingerData(mb + "9000");
+                    } else {
+                        mb = "";
+                    }
+                    break;
+                case 2:
+                    //特征
+                    arrRet = (String[]) msg.obj;
+                    if (arrRet[0].equals("0")) {
+                        tz = arrRet[1];
+                        Contents.play_Finger = false;
+                        prograss.setVisibility(View.GONE);
+                        dealFingerData(tz + "9000");
+                        Log.e("YJL", "tz===" + tz);
+                    } else {
+                        tz = "";
+                    }
+                    break;
+            }
+        }
+    };
+    private boolean blueOrWifi;
+    private boolean ble;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -65,6 +120,7 @@ public class BluetoothServerActivity extends Activity {
         stringBuilder = new StringBuilder();
         resultBuilder = new StringBuilder();
         adapter = new ArrayAdapter<String>(this, R.layout.list_item, lists);
+        mIFpDevDriver = AppConfig.getInstance().getmIFpDevDriver();
         //初始化控件
         initView();
         //初始化蓝牙
@@ -105,6 +161,20 @@ public class BluetoothServerActivity extends Activity {
         command = ((TextView) findViewById(R.id.command));
         prograss = ((LinearLayout) findViewById(R.id.layout_prograss));
         prograss_tv = ((TextView) findViewById(R.id.prograss_tv));
+    }
+
+    private void dealFingerData(String data) {
+        if (blueOrWifi) {
+            if (ble) {
+                dealDate(data.getBytes(), mDevice, AppConfig.getInstance().getCharacter(), AppConfig.getInstance().getServer());
+            } else {
+                AppConfig.getInstance().getmBluetoothChatUtil().write(data.getBytes());
+            }
+        } else {
+            AppConfig.getInstance().getSocketServerUtil().sendMessage(data.getBytes());
+
+        }
+
     }
 
     private BroadcastReceiver receiver = new BroadcastReceiver() {
@@ -153,8 +223,97 @@ public class BluetoothServerActivity extends Activity {
         lv.setSelection(lists.size() - 1);
         //播放语音，根据指令设置
         playVoice(cmd);
-        //串口发送指令并处理
-        sendMessagBySerialPort(cmd, blueOrWifi, ble);
+        if (Contents.COMMAND_FINGER_VERSION.equals(cmd)) {
+            //指纹usb---获取版本
+            if (g_bIsRunning) {
+                Log.e("YJL", "设备忙");
+                return;
+            }
+            getVersion(blueOrWifi, ble);
+
+        } else if (Contents.COMMAND_FINGER_FEATURE.equals(cmd)) {
+            //指纹usb---获取特征
+            if (g_bIsRunning) {
+                Log.e("YJL", "设备忙");
+                return;
+            }
+            getTZ(blueOrWifi, ble);
+        } else if (Contents.COMMAND_FINGER_MODE.equals(cmd)) {
+            //指纹usb---获取模板
+            if (g_bIsRunning) {
+                Log.e("YJL", "设备忙");
+                return;
+            }
+            getMB(blueOrWifi, ble);
+        } else {
+            //串口发送指令并处理
+            sendMessagBySerialPort(cmd, blueOrWifi, ble);
+        }
+    }
+
+    /**
+     * 指纹获取版本
+     */
+    private void getVersion(boolean blueOrWifi, boolean ble) {
+        this.blueOrWifi = blueOrWifi;
+        this.ble = ble;
+        new Thread() {
+            public void run() {
+                String[] arrRet;
+                g_bIsRunning = true;
+                arrRet = mIFpDevDriver.getFpVersion();
+                g_bIsRunning = false;
+                Message message = new Message();
+                message.what = 0;
+                message.obj = arrRet;
+                handler.sendMessage(message);
+                return;
+            }
+        }.start();
+    }
+
+    /**
+     * 指纹获取特征--1次
+     */
+    boolean g_bIsRunning = false;
+
+    private void getTZ(boolean blueOrWifi, boolean ble) {
+        this.blueOrWifi = blueOrWifi;
+        this.ble = ble;
+        new Thread() {
+            public void run() {
+                String[] arrRet;
+                g_bIsRunning = true;
+                arrRet = mIFpDevDriver.readFinger(10);
+                g_bIsRunning = false;
+                Message message = new Message();
+                message.what = 2;
+                message.obj = arrRet;
+                handler.sendMessage(message);
+                return;
+            }
+        }.start();
+    }
+
+    /**
+     * 指纹获取模板---3次
+     */
+    private void getMB(boolean blueOrWifi, final boolean ble) {
+        this.blueOrWifi = blueOrWifi;
+        this.ble = ble;
+        new Thread() {
+            public void run() {
+                String[] arrRet;
+                g_bIsRunning = true;
+                arrRet = mIFpDevDriver.registerFinger(40);
+                g_bIsRunning = false;
+                Message message = new Message();
+                message.what = 1;
+                message.obj = arrRet;
+                handler.sendMessage(message);
+                return;
+            }
+        }.start();
     }
 
     /**
@@ -363,7 +522,25 @@ public class BluetoothServerActivity extends Activity {
                 break;
 
             //指纹指令
-            case Contents.COMMAND_FINGER:
+            case Contents.COMMAND_FINGER_VERSION:
+                command.setText("");
+                if (!Contents.play_Finger) {
+                    prograss.setVisibility(View.VISIBLE);
+                    prograss_tv.setText("请按指纹");
+                    setPlayVoice(7);
+                    MediaServiceManager.startService(BluetoothServerActivity.this, Contents.VOICE_FINGER, null);
+                }
+                break;
+            case Contents.COMMAND_FINGER_FEATURE:
+                command.setText("");
+                if (!Contents.play_Finger) {
+                    prograss.setVisibility(View.VISIBLE);
+                    prograss_tv.setText("请按指纹");
+                    setPlayVoice(7);
+                    MediaServiceManager.startService(BluetoothServerActivity.this, Contents.VOICE_FINGER, null);
+                }
+                break;
+            case Contents.COMMAND_FINGER_MODE:
                 command.setText("");
                 if (!Contents.play_Finger) {
                     prograss.setVisibility(View.VISIBLE);
@@ -542,6 +719,7 @@ public class BluetoothServerActivity extends Activity {
         AppConfig.getInstance().getSocketServerUtil().disconnect();
         MediaServiceManager.stopService(BluetoothServerActivity.this);
         AppConfig.getInstance().closeSerialPort();
+        AppConfig.getInstance().getmIFpDevDriver().closeDevice();
         super.onDestroy();
         Log.d(TAG, "onDestroy");
     }

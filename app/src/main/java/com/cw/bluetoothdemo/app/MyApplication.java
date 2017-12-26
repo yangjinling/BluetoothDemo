@@ -9,6 +9,7 @@ import android.bluetooth.BluetoothManager;
 import com.cw.bluetoothdemo.connection.SerialConnection;
 import com.cw.bluetoothdemo.util.BluetoothChatUtil;
 import com.cw.bluetoothdemo.util.SocketServerUtil;
+import com.wellcom.finger.FpDriverV12;
 
 import java.util.UUID;
 
@@ -20,6 +21,8 @@ public class MyApplication extends Application {
     private BluetoothGattCharacteristic character;
     private BluetoothGattService service;
     private SocketServerUtil socketServerUtil;
+    private FpDriverV12 mIFpDevDriver;
+
     @Override
     public void onCreate() {
         super.onCreate();
@@ -35,7 +38,18 @@ public class MyApplication extends Application {
         service.addCharacteristic(character);
         AppConfig.getInstance().setCharacter(character);
         AppConfig.getInstance().setService(service);
-        socketServerUtil= new SocketServerUtil(9999);
+        socketServerUtil = new SocketServerUtil(9999);
         AppConfig.getInstance().setSocketServerUtil(socketServerUtil);
+        try {
+            mIFpDevDriver = new FpDriverV12(getApplicationContext());// finger print driver
+            AppConfig.getInstance().setmIFpDevDriver(mIFpDevDriver);
+            mIFpDevDriver.openDevice();
+        } catch (SecurityException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        } catch (Exception e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
     }
 }

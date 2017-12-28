@@ -35,6 +35,7 @@ import com.cw.bluetoothdemo.util.BJCWUtil;
 import com.cw.bluetoothdemo.util.BluetoothChatUtil;
 import com.cw.bluetoothdemo.app.Contents;
 import com.cw.bluetoothdemo.util.BoxDataUtils;
+import com.cw.bluetoothdemo.util.Control;
 import com.wellcom.finger.FpDriverV12;
 
 import java.io.BufferedReader;
@@ -67,30 +68,35 @@ public class BluetoothServerActivity extends Activity {
         public void handleMessage(Message msg) {
             super.handleMessage(msg);
             String[] arrRet;
+            prograss.setVisibility(View.GONE);
             switch (msg.what) {
                 case 0:
                     arrRet = (String[]) msg.obj;
                     if (arrRet[0].equals("0")) {
-                        prograss.setVisibility(View.GONE);
                         Contents.play_Finger = false;
                         dealFingerData(arrRet[1] + "9000");
                         Log.e("YJL", "version==" + arrRet[1]);
                     } else {
 //                        tv_version.setText("");
                         Log.e("YJL", "version==失败");
+//                        getVersion(blueOrWifi, ble);
+                        dealFingerData("6000");
+                        Toast.makeText(getApplicationContext(), "版本获取失败，重新获取", Toast.LENGTH_SHORT).show();
                     }
                     break;
                 case 1:
                     //模板
                     arrRet = (String[]) msg.obj;
                     if (arrRet[0].equals("0")) {
-                        prograss.setVisibility(View.GONE);
                         Contents.play_Finger = false;
                         mb = arrRet[1];
                         Log.e("YJL", "mb===" + mb);
                         dealFingerData(mb + "9000");
                     } else {
                         mb = "";
+//                        getMB(blueOrWifi, ble);
+                        dealFingerData("6000");
+                        Toast.makeText(getApplicationContext(), "模板获取失败，重新获取", Toast.LENGTH_SHORT).show();
                     }
                     break;
                 case 2:
@@ -99,11 +105,13 @@ public class BluetoothServerActivity extends Activity {
                     if (arrRet[0].equals("0")) {
                         tz = arrRet[1];
                         Contents.play_Finger = false;
-                        prograss.setVisibility(View.GONE);
                         dealFingerData(tz + "9000");
                         Log.e("YJL", "tz===" + tz);
                     } else {
                         tz = "";
+                        dealFingerData("6000");
+                        Toast.makeText(getApplicationContext(), "特征获取失败，重新获取", Toast.LENGTH_SHORT).show();
+//                        getTZ(blueOrWifi, ble);
                     }
                     break;
             }
@@ -721,6 +729,16 @@ public class BluetoothServerActivity extends Activity {
         AppConfig.getInstance().closeSerialPort();
         AppConfig.getInstance().getmIFpDevDriver().closeDevice();
         super.onDestroy();
+        if (Contents.isControl) {
+            Control.gpio_control(927, 0);//串口
+            Control.gpio_control(921, 0);//host3
+            Control.gpio_control(920, 0);//host4
+            Control.gpio_control(922, 0);//host1
+            Control.gpio_control(1006, 0);//host2
+            Control.gpio_control(1010, 0);//hub
+            Control.gpio_control(1009, 0);//hub
+            Control.gpio_control(969, 0);//切换host
+        }
         Log.d(TAG, "onDestroy");
     }
 

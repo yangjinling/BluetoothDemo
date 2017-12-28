@@ -5,13 +5,23 @@ import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattServer;
 import android.bluetooth.BluetoothGattService;
 import android.bluetooth.BluetoothManager;
+import android.text.TextUtils;
+import android.util.Log;
 
 import com.cw.bluetoothdemo.connection.SerialConnection;
 import com.cw.bluetoothdemo.util.BluetoothChatUtil;
+import com.cw.bluetoothdemo.util.Control;
 import com.cw.bluetoothdemo.util.SocketServerUtil;
 import com.wellcom.finger.FpDriverV12;
 
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.UUID;
+import java.util.Vector;
 
 /**
  * Created by yangjinling on 2017/11/29.
@@ -51,5 +61,17 @@ public class MyApplication extends Application {
             // TODO Auto-generated catch block
             e.printStackTrace();
         }
+        if (!Contents.isControl) {
+            Control.gpio_control(927, 1);//串口
+            Control.gpio_control(921, 1);//host3
+            Control.gpio_control(920, 1);//host4
+            Control.gpio_control(922, 1);//host1
+            Control.gpio_control(1006, 1);//host2
+            Control.gpio_control(1010, 1);//hub
+            Control.gpio_control(1009, 1);//hub
+            Control.gpio_control(969, 1);
+        }
     }
+
+
 }

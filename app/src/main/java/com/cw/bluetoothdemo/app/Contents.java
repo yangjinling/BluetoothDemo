@@ -67,5 +67,6 @@ public class Contents {
     public static boolean play_KeyMing = false;
     public static boolean play_KeyMi = false;
     public static boolean play_Finger = false;
+    public static boolean isControl=false;
 
 }

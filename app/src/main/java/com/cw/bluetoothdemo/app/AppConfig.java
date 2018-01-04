@@ -33,7 +33,11 @@ public class AppConfig {
     private BluetoothGattService service;
     private SocketServerUtil socketServerUtil;
     private FpDriverV12 mIFpDevDriver;
-
+    /**
+     * 签名的时候如果横竖屏切换，保存的用户签名图片
+     */
+    public static Bitmap mBitmap;
+    private int userWriteNum; // 用户在签字界面已经签的笔画数
     private AppConfig() {
     }
 
@@ -50,6 +54,14 @@ public class AppConfig {
             }
         }
         return mAppConfig;
+    }
+
+    public int getUserWriteNum() {
+        return userWriteNum;
+    }
+
+    public void setUserWriteNum(int userWriteNum) {
+        this.userWriteNum = userWriteNum;
     }
 
     public FpDriverV12 getmIFpDevDriver() {

@@ -37,6 +37,14 @@ public class MyApplication extends Application {
     public void onCreate() {
         super.onCreate();
         AppConfig.setContext(getApplicationContext());
+        Control.gpio_control(927, 1);//串口
+        Control.gpio_control(921, 1);//host3
+        Control.gpio_control(920, 1);//host4
+        Control.gpio_control(922, 1);//host1
+        Control.gpio_control(1006, 1);//host2
+        Control.gpio_control(1010, 1);//hub
+        Control.gpio_control(1009, 1);//hub
+        Control.gpio_control(969, 1);
         AppConfig.getInstance().setConnection(new SerialConnection(AppConfig.getContext()));
         AppConfig.getInstance().setmBluetoothChatUtil(BluetoothChatUtil.getInstance(getApplicationContext()));
         character = new BluetoothGattCharacteristic(
@@ -50,27 +58,6 @@ public class MyApplication extends Application {
         AppConfig.getInstance().setService(service);
         socketServerUtil = new SocketServerUtil(9999);
         AppConfig.getInstance().setSocketServerUtil(socketServerUtil);
-        try {
-            mIFpDevDriver = new FpDriverV12(getApplicationContext());// finger print driver
-            AppConfig.getInstance().setmIFpDevDriver(mIFpDevDriver);
-            mIFpDevDriver.openDevice();
-        } catch (SecurityException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        } catch (Exception e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        }
-        if (!Contents.isControl) {
-            Control.gpio_control(927, 1);//串口
-            Control.gpio_control(921, 1);//host3
-            Control.gpio_control(920, 1);//host4
-            Control.gpio_control(922, 1);//host1
-            Control.gpio_control(1006, 1);//host2
-            Control.gpio_control(1010, 1);//hub
-            Control.gpio_control(1009, 1);//hub
-            Control.gpio_control(969, 1);
-        }
     }
 
 

@@ -10,16 +10,20 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.Message;
+import android.support.annotation.RequiresPermission;
 import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.TextView;
@@ -36,9 +40,15 @@ import com.cw.bluetoothdemo.util.BluetoothChatUtil;
 import com.cw.bluetoothdemo.app.Contents;
 import com.cw.bluetoothdemo.util.BoxDataUtils;
 import com.cw.bluetoothdemo.util.Control;
+import com.cw.bluetoothdemo.view.DialogListener;
+import com.cw.bluetoothdemo.view.WritePadDialog;
 import com.wellcom.finger.FpDriverV12;
 
 import java.io.BufferedReader;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
@@ -69,47 +79,51 @@ public class BluetoothServerActivity extends Activity {
             super.handleMessage(msg);
             String[] arrRet;
             prograss.setVisibility(View.GONE);
+            Contents.play_Finger = false;
             switch (msg.what) {
                 case 0:
                     arrRet = (String[]) msg.obj;
+                    lists.add("" + arrRet[0] + arrRet[1]);
+                    adapter.notifyDataSetChanged();
                     if (arrRet[0].equals("0")) {
-                        Contents.play_Finger = false;
-                        dealFingerData(arrRet[1] + "9000");
+                        dealFingerData("52"+arrRet[1] + "9000");
                         Log.e("YJL", "version==" + arrRet[1]);
                     } else {
 //                        tv_version.setText("");
                         Log.e("YJL", "version==失败");
 //                        getVersion(blueOrWifi, ble);
-                        dealFingerData("6000");
+                        dealFingerData("52"+arrRet[0] + arrRet[1] + "9000");
                         Toast.makeText(getApplicationContext(), "版本获取失败，重新获取", Toast.LENGTH_SHORT).show();
                     }
                     break;
                 case 1:
                     //模板
                     arrRet = (String[]) msg.obj;
+                    lists.add("" + arrRet[0] + arrRet[1]);
+                    adapter.notifyDataSetChanged();
                     if (arrRet[0].equals("0")) {
-                        Contents.play_Finger = false;
                         mb = arrRet[1];
                         Log.e("YJL", "mb===" + mb);
-                        dealFingerData(mb + "9000");
+                        dealFingerData("52"+mb + "9000");
                     } else {
                         mb = "";
 //                        getMB(blueOrWifi, ble);
-                        dealFingerData("6000");
+                        dealFingerData("52"+arrRet[0] + arrRet[1] + "9000");
                         Toast.makeText(getApplicationContext(), "模板获取失败，重新获取", Toast.LENGTH_SHORT).show();
                     }
                     break;
                 case 2:
                     //特征
                     arrRet = (String[]) msg.obj;
+                    lists.add("" + arrRet[0] + arrRet[1]);
+                    adapter.notifyDataSetChanged();
                     if (arrRet[0].equals("0")) {
                         tz = arrRet[1];
-                        Contents.play_Finger = false;
-                        dealFingerData(tz + "9000");
+                        dealFingerData("52"+tz + "9000");
                         Log.e("YJL", "tz===" + tz);
                     } else {
                         tz = "";
-                        dealFingerData("6000");
+                        dealFingerData("52"+arrRet[0] + arrRet[1] + "9000");
                         Toast.makeText(getApplicationContext(), "特征获取失败，重新获取", Toast.LENGTH_SHORT).show();
 //                        getTZ(blueOrWifi, ble);
                     }
@@ -119,6 +133,9 @@ public class BluetoothServerActivity extends Activity {
     };
     private boolean blueOrWifi;
     private boolean ble;
+    private Button sign;
+    String[] arrRet;
+    private ImageView imageview;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -127,14 +144,29 @@ public class BluetoothServerActivity extends Activity {
         mContext = this;
         stringBuilder = new StringBuilder();
         resultBuilder = new StringBuilder();
-        adapter = new ArrayAdapter<String>(this, R.layout.list_item, lists);
-        mIFpDevDriver = AppConfig.getInstance().getmIFpDevDriver();
         //初始化控件
         initView();
         //初始化蓝牙
         initBluetooth();
         //注册广播且处理数据
         register();
+        handler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    mIFpDevDriver = new FpDriverV12(getApplicationContext());// finger print driver
+                } catch (SecurityException e) {
+                    // TODO Auto-generated catch block
+                    e.printStackTrace();
+                } catch (Exception e) {
+                    // TODO Auto-generated catch block
+                    e.printStackTrace();
+                }
+                Toast.makeText(BluetoothServerActivity.this, "初始化指纹仪", Toast.LENGTH_SHORT).show();
+                initFinger();
+            }
+        }, 5000);
+
     }
 
     private void register() {
@@ -156,6 +188,7 @@ public class BluetoothServerActivity extends Activity {
     //初始化控件
     private void initView() {
         lv = ((ListView) findViewById(R.id.lv));
+        adapter = new ArrayAdapter<String>(this, R.layout.list_item, lists);
         lv.setAdapter(adapter);
         delete = ((Button) findViewById(R.id.delete));
         delete.setOnClickListener(new OnClickListener() {
@@ -166,9 +199,19 @@ public class BluetoothServerActivity extends Activity {
                 command.setText("");
             }
         });
+        sign = ((Button) findViewById(R.id.sign));
+        sign.setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent intent = new Intent(BluetoothServerActivity.this, WriteActivity.class);
+                startActivity(intent);
+//                showDialog();
+            }
+        });
         command = ((TextView) findViewById(R.id.command));
         prograss = ((LinearLayout) findViewById(R.id.layout_prograss));
         prograss_tv = ((TextView) findViewById(R.id.prograss_tv));
+        imageview = ((ImageView) findViewById(R.id.imageview));
     }
 
     private void dealFingerData(String data) {
@@ -185,6 +228,21 @@ public class BluetoothServerActivity extends Activity {
 
     }
 
+    private void dealFingerData(byte[] data) {
+        Log.e("YJL", "data==" + data + "---" + data.length);
+        if (blueOrWifi) {
+            if (ble) {
+                dealDate(data, mDevice, AppConfig.getInstance().getCharacter(), AppConfig.getInstance().getServer());
+            } else {
+                AppConfig.getInstance().getmBluetoothChatUtil().write(data);
+            }
+        } else {
+            AppConfig.getInstance().getSocketServerUtil().sendMessage(data);
+
+        }
+
+    }
+
     private BroadcastReceiver receiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, final Intent intent) {
@@ -196,11 +254,17 @@ public class BluetoothServerActivity extends Activity {
             } else if (Contents.TYPE_BLUE.equals(action)) {
                 //经典蓝牙
                 dealMessage(intent, true, false);
+                blueOrWifi = true;
+                ble = false;
             } else if (Contents.TYPE_BLE.equals(action)) {
                 //ble蓝牙
+                blueOrWifi = true;
+                ble = true;
                 dealMessage(intent, true, true);
             } else if (Contents.TYPE_WIFI.equals(action)) {
                 //wifi
+                ble = false;
+                blueOrWifi = false;
                 dealMessage(intent, false, false);
             }
         }
@@ -253,31 +317,46 @@ public class BluetoothServerActivity extends Activity {
                 return;
             }
             getMB(blueOrWifi, ble);
+        } else if (Contents.COMMAND_SIGN.equals(cmd)) {
+            //签名
+            Intent intent1 = new Intent(BluetoothServerActivity.this, WriteActivity.class);
+            startActivityForResult(intent1, 100);
+//            showDialog();
         } else {
             //串口发送指令并处理
             sendMessagBySerialPort(cmd, blueOrWifi, ble);
         }
     }
 
+    /*指纹设备初始化*/
+    public void initFinger() {
+        mIFpDevDriver.cancel();
+        mIFpDevDriver.closeDevice();
+        arrRet = mIFpDevDriver.openDevice();
+        lists.add("" + arrRet[0] + arrRet[1]);
+        adapter.notifyDataSetChanged();
+    }
+
     /**
      * 指纹获取版本
      */
     private void getVersion(boolean blueOrWifi, boolean ble) {
+        initFinger();
         this.blueOrWifi = blueOrWifi;
         this.ble = ble;
-        new Thread() {
-            public void run() {
-                String[] arrRet;
-                g_bIsRunning = true;
-                arrRet = mIFpDevDriver.getFpVersion();
-                g_bIsRunning = false;
-                Message message = new Message();
-                message.what = 0;
-                message.obj = arrRet;
-                handler.sendMessage(message);
-                return;
+       /* new Thread() {
+            public void run() {*/
+        String[] arrRet;
+        g_bIsRunning = true;
+        arrRet = mIFpDevDriver.getFpVersion();
+        g_bIsRunning = false;
+        Message message = new Message();
+        message.what = 0;
+        message.obj = arrRet;
+        handler.sendMessage(message);
+            /*    return;
             }
-        }.start();
+        }.start();*/
     }
 
     /**
@@ -286,6 +365,7 @@ public class BluetoothServerActivity extends Activity {
     boolean g_bIsRunning = false;
 
     private void getTZ(boolean blueOrWifi, boolean ble) {
+        initFinger();
         this.blueOrWifi = blueOrWifi;
         this.ble = ble;
         new Thread() {
@@ -307,6 +387,7 @@ public class BluetoothServerActivity extends Activity {
      * 指纹获取模板---3次
      */
     private void getMB(boolean blueOrWifi, final boolean ble) {
+        initFinger();
         this.blueOrWifi = blueOrWifi;
         this.ble = ble;
         new Thread() {
@@ -362,51 +443,56 @@ public class BluetoothServerActivity extends Activity {
                         stringBuilder = new StringBuilder();
                     }
                 } else {
+
                     if (Contents.play_KeyMi || Contents.play_KeyMing) {
                         //查看是否明文密文指令
                     } else {
                         command.setText("");
                     }
-                    resultBuilder.append(data);
-                    stringBuilder = new StringBuilder();
-                    String result = resultBuilder.toString();
-                    if (resultBuilder.length() >= 10) {
-                        String strSW = resultBuilder.substring(resultBuilder.length() - 4);
-                        int pulSW = Integer.valueOf(strSW, 16);
-                        Log.e("YJL", "result===" + result);
-                        Log.e("YJL", "pulSw===" + pulSW);
-                        /*判断数据是否完整*/
-                        boolean completion = BJCWUtil.judgeData(result);
-                        if (completion) {
-                            //设置当前prograss是否隐藏
-                            setPrograssShow();
-                            /*状态码显示*/
-                            command.setText("" + strSW);
-                            if (blueOrWifi) {
-                                //true：蓝牙
-                                if (ble) {
-                                    //true ble蓝牙
-                                    if (null != mDevice)
-                                        dealDate(BJCWUtil.StrToHex(result), mDevice, AppConfig.getInstance().getCharacter(), AppConfig.getInstance().getServer());
-                                } else {
-                                    //false 经典蓝牙
-                                    AppConfig.getInstance().getmBluetoothChatUtil().write(BJCWUtil.StrToHex(result));
-                                }
-                            } else {
-//                                false：wifi
-                                AppConfig.getInstance().getSocketServerUtil().sendMessage(BJCWUtil.StrToHex(result));
-                            }
-                            resultBuilder = new StringBuilder();
-                        } else {
-//                            数据不完整，重新发送
-                            resultBuilder = new StringBuilder();
-                            sendMessagBySerialPort(cmd, blueOrWifi, ble);
-                        }
-                    } else {
-                        //数据长度不正确重新发送
-                        resultBuilder = new StringBuilder();
-                        //重发
+                    if (data.equals("00026984") || data.equals("5200026984")) {
                         sendMessagBySerialPort(cmd, blueOrWifi, ble);
+                    } else {
+                        resultBuilder.append(data);
+                        stringBuilder = new StringBuilder();
+                        String result = resultBuilder.toString();
+                        if (resultBuilder.length() >= 10) {
+                            String strSW = resultBuilder.substring(resultBuilder.length() - 4);
+                            int pulSW = Integer.valueOf(strSW, 16);
+                            Log.e("YJL", "result===" + result);
+                            Log.e("YJL", "pulSw===" + pulSW);
+                        /*判断数据是否完整*/
+                            boolean completion = BJCWUtil.judgeData(result);
+                            if (completion) {
+                                //设置当前prograss是否隐藏
+                                setPrograssShow();
+                            /*状态码显示*/
+                                command.setText("" + strSW);
+                                if (blueOrWifi) {
+                                    //true：蓝牙
+                                    if (ble) {
+                                        //true ble蓝牙
+                                        if (null != mDevice)
+                                            dealDate(BJCWUtil.StrToHex(result), mDevice, AppConfig.getInstance().getCharacter(), AppConfig.getInstance().getServer());
+                                    } else {
+                                        //false 经典蓝牙
+                                        AppConfig.getInstance().getmBluetoothChatUtil().write(BJCWUtil.StrToHex(result));
+                                    }
+                                } else {
+//                                false：wifi
+                                    AppConfig.getInstance().getSocketServerUtil().sendMessage(BJCWUtil.StrToHex(result));
+                                }
+                                resultBuilder = new StringBuilder();
+                            } else {
+//                            数据不完整，重新发送
+//                            resultBuilder = new StringBuilder();
+//                            sendMessagBySerialPort(cmd, blueOrWifi, ble);
+                            }
+                        } else {
+                            //数据长度不正确重新发送
+//                        resultBuilder = new StringBuilder();
+//                        //重发
+//                        sendMessagBySerialPort(cmd, blueOrWifi, ble);
+                        }
                     }
                 }
             }
@@ -557,6 +643,16 @@ public class BluetoothServerActivity extends Activity {
                     MediaServiceManager.startService(BluetoothServerActivity.this, Contents.VOICE_FINGER, null);
                 }
                 break;
+            //签名
+            case Contents.COMMAND_SIGN:
+                command.setText("");
+                if (!Contents.play_sign) {
+//                    prograss.setVisibility(View.VISIBLE);
+//                    prograss_tv.setText("请签名");
+                    setPlayVoice(7);
+                    MediaServiceManager.startService(BluetoothServerActivity.this, Contents.VOICE_SIGN, null);
+                }
+                break;
             //执行刷卡结束的指令后播放标记置为false
             case Contents.COMMAND_IC_END:
                 setPlayVoice(8);
@@ -612,6 +708,7 @@ public class BluetoothServerActivity extends Activity {
         Contents.play_KeyMing = false;
         Contents.play_KeyMi = false;
         Contents.play_Finger = false;
+        Contents.play_sign = false;
         switch (type) {
             case 1:
                 //接触
@@ -699,6 +796,14 @@ public class BluetoothServerActivity extends Activity {
             } else if (resultCode == RESULT_CANCELED) {
                 finish();
             }
+        } else if (requestCode == 100 && resultCode == RESULT_OK) {
+
+//            byte[] bytes = Control.getBytes(Contents.folderStr);
+            byte[] bytes = Control.getBitmapByte(AppConfig.mBitmap);
+            send(bytes, "photo");
+            AppConfig.mBitmap = null;
+            Contents.play_sign = false;
+            Log.e("YJL", "bytes===" + bytes.length);
         }
     }
 
@@ -727,18 +832,17 @@ public class BluetoothServerActivity extends Activity {
         AppConfig.getInstance().getSocketServerUtil().disconnect();
         MediaServiceManager.stopService(BluetoothServerActivity.this);
         AppConfig.getInstance().closeSerialPort();
-        AppConfig.getInstance().getmIFpDevDriver().closeDevice();
+        mIFpDevDriver.cancel();
+        mIFpDevDriver.closeDevice();
+        Control.gpio_control(927, 0);//串口
+        Control.gpio_control(921, 0);//host3
+        Control.gpio_control(920, 0);//host4
+        Control.gpio_control(922, 0);//host1
+        Control.gpio_control(1006, 0);//host2
+        Control.gpio_control(1010, 0);//hub
+        Control.gpio_control(1009, 0);//hub
+        Control.gpio_control(969, 0);//切换host
         super.onDestroy();
-        if (Contents.isControl) {
-            Control.gpio_control(927, 0);//串口
-            Control.gpio_control(921, 0);//host3
-            Control.gpio_control(920, 0);//host4
-            Control.gpio_control(922, 0);//host1
-            Control.gpio_control(1006, 0);//host2
-            Control.gpio_control(1010, 0);//hub
-            Control.gpio_control(1009, 0);//hub
-            Control.gpio_control(969, 0);//切换host
-        }
         Log.d(TAG, "onDestroy");
     }
 
@@ -778,5 +882,133 @@ public class BluetoothServerActivity extends Activity {
 
         }
 
+    }
+
+    private Bitmap mSignBitmap;
+    private String signPath;
+
+    private void showDialog() {
+        WritePadDialog writeTabletDialog = new WritePadDialog(
+                BluetoothServerActivity.this, R.style.SignBoardDialog, new DialogListener() {
+            public void refreshActivity(Object object) {
+                mSignBitmap = (Bitmap) object;
+//                signPath = createFile();
+
+                //对图片进行压缩
+//                BitmapFactory.Options options = new BitmapFactory.Options();
+//                options.inSampleSize = 15;
+//                options.inTempStorage = new byte[5 * 1024];
+//                Bitmap zoombm = BitmapFactory.decodeFile(signPath, options);
+
+//                Bitmap zoombm = getCompressBitmap(signPath);
+                //ivSign.setImageBitmap(mSignBitmap);
+                byte[] bytes = Control.getBitmapByte(mSignBitmap);
+                Bitmap bmp = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
+                imageview.setImageBitmap(bmp);
+                send(bytes, "photo");
+
+            }
+        });
+        writeTabletDialog.show();
+    }
+
+    /**
+     * 创建手写签名文件
+     *
+     * @return
+     */
+    private String createFile() {
+        ByteArrayOutputStream baos = null;
+        String _path = null;
+        try {
+            String sign_dir = Contents.folderStr;
+            _path = sign_dir + System.currentTimeMillis() + ".png";
+            baos = new ByteArrayOutputStream();
+            mSignBitmap.compress(Bitmap.CompressFormat.PNG, 100, baos);
+            byte[] photoBytes = baos.toByteArray();
+            if (photoBytes != null) {
+                new FileOutputStream(new File(_path)).write(photoBytes);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                if (baos != null)
+                    baos.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+        return _path;
+    }
+
+    /**
+     * 根据图片路径获取图片的压缩图
+     *
+     * @param filePath
+     * @return
+     */
+    public Bitmap getCompressBitmap(String filePath) {
+        BitmapFactory.Options options = new BitmapFactory.Options();
+        options.inJustDecodeBounds = true;
+        // 获取这个图片的宽和高
+        Bitmap bitmap = BitmapFactory.decodeFile(filePath, options); //此时返回bm为空
+        if (bitmap == null) {
+        }
+        //计算缩放比
+        int simpleSize = (int) (options.outHeight / (float) 200);
+        if (simpleSize <= 0)
+            simpleSize = 1;
+        options.inSampleSize = simpleSize;
+        options.inJustDecodeBounds = false;
+        //重新读入图片，注意这次要把options.inJustDecodeBounds 设为 false哦
+        bitmap = BitmapFactory.decodeFile(filePath, options);
+        int w = bitmap.getWidth();
+        int h = bitmap.getHeight();
+        System.out.println(w + "   " + h);
+        return bitmap;
+    }
+
+    //添加头发送数据
+    public void send(byte[] data, String str) {
+        int length = data.length;
+        Log.e("YJL", "length--->>" + length);
+        byte[] length_b = null;
+        try {
+            length_b = Control.intToByteArray(length);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        if (length_b == null) return;
+
+        //获得一个字节长度为14的byte数组 headInfoLength为14
+        byte[] headerInfo = new byte[14];
+
+        //前六位添加012345的标志位
+        for (int i = 0; i < 6; i++) {
+            headerInfo[i] = (byte) i;
+        }
+
+        //7到10位添加图片大小的字节长度
+        for (int i = 0; i < 4; i++) {
+            headerInfo[6 + i] = length_b[i];
+        }
+
+        //11到14位添加动作信息
+        if (str.equals("photo")) {
+            for (int i = 0; i < 4; i++) {
+                headerInfo[10 + i] = (byte) 1;
+            }
+        }
+        //将对应信息添加到图片前面
+        byte[] sendMsg = new byte[length + 14];
+        for (int i = 0; i < sendMsg.length; i++) {
+            if (i < 14) {
+                sendMsg[i] = headerInfo[i];
+            } else {
+                sendMsg[i] = data[i - 14];
+            }
+        }
+        dealFingerData(sendMsg);
     }
 }

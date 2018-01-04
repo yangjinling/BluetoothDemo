@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <RelativeLayout
+        android:id="@+id/layout_title"
+        android:layout_width="fill_parent"
+        android:layout_height="56.0dip"
+        android:background="@mipmap/money_bg">
+
+        <TextView
+            style="@style/TitleMiddleTextStyle"
+            android:text="签字" />
+    </RelativeLayout>
+
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_above="@+id/layout_menu_write"
+        android:layout_below="@id/layout_title">
+
+        <RelativeLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center">
+
+            <TextView
+                android:id="@+id/tv_title"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_centerHorizontal="true"
+                android:layout_marginTop="8dp"
+                android:text="请规范签字"
+                android:textColor="@android:color/holo_red_dark"
+                android:textSize="18sp" />
+
+            <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_alignParentBottom="true"
+                android:layout_centerHorizontal="true"
+                android:layout_marginBottom="10dp"
+                android:layout_marginLeft="5dp"
+                android:layout_marginRight="5dp">
+
+                <TextView
+                    android:id="@+id/tv_bottom1"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginRight="5dp"
+                    android:text="*友情提醒："
+                    android:textColor="@color/TextColorGray"
+                    android:textSize="12sp" />
+
+                <TextView
+                    android:id="@+id/tv_bottom2"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_toRightOf="@id/tv_bottom1"
+                    android:text="签名必须与持卡人姓名一致，请尽量保持字迹的清晰、可辨识；如签名缺失、不规范，可能会导致交易失败或到账延迟。"
+                    android:textColor="@color/TextColorGray"
+                    android:textSize="12sp" />
+            </RelativeLayout>
+        </RelativeLayout>
+
+        <com.cw.bluetoothdemo.view.MySignView
+            android:id="@+id/mySignView"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
+    </FrameLayout>
+
+    <LinearLayout
+        android:id="@+id/layout_menu_write"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_marginBottom="10dp"
+        android:layout_marginTop="10dp"
+        android:orientation="horizontal">
+
+        <RelativeLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1">
+
+            <Button
+                android:id="@+id/btn_clear_write"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_centerInParent="true"
+                android:background="@drawable/sign_menu"
+                android:text="清除笔迹"
+                android:textColor="@android:color/black"
+                android:textSize="15sp" />
+        </RelativeLayout>
+
+        <RelativeLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1">
+
+            <Button
+                android:id="@+id/btn_confirm_write"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_centerInParent="true"
+                android:background="@drawable/sign_menu"
+                android:text="完成签名"
+                android:textSize="15sp" />
+        </RelativeLayout>
+
+        <RelativeLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1">
+
+            <Button
+                android:id="@+id/btn_trade_detail"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_centerInParent="true"
+                android:background="@drawable/sign_menu"
+                android:text="交易详情"
+                android:textSize="15sp" />
+        </RelativeLayout>
+    </LinearLayout>
+</RelativeLayout>

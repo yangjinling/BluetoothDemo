@@ -10,6 +10,9 @@ import android.os.Handler;
 import android.os.Message;
 import android.util.Log;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -193,6 +196,34 @@ public class BluetoothChatUtil {
             mAcceptThread = null;
         }
         setState(STATE_NONE);
+    }
+
+    public void write(File file) {
+        //创建临时对象
+        ConnectedThread r;
+        // 同步副本的connectedthread
+        synchronized (this) {
+            if (mState != STATE_CONNECTED) return;
+            r = mConnectedThread;
+        }
+        FileInputStream in = null;
+        try {
+            in = new FileInputStream(file);
+            int j = 0;
+            /************************************/
+            byte[] buffer = new byte[512];
+            /************************************/
+            while ((j = in.read(buffer)) != -1) {
+                //out是一个输出流，向接收端发送文件字节
+                // 执行写同步
+                r.write(buffer);
+            }
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
     }
 
     /**

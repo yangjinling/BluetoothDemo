@@ -1,5 +1,9 @@
 package com.cw.bluetoothdemo.app;
 
+import android.os.Environment;
+
+import java.io.File;
+
 /**
  * Created by yangjinling on 2017/11/28.
  */
@@ -44,6 +48,8 @@ public class Contents {
     public final static String COMMAND_FINGER_FEATURE = "09";
     //指纹获取模板
     public final static String COMMAND_FINGER_MODE = "10";
+    //签名指令
+    public final static String COMMAND_SIGN = "11";
     //当前接收到手机端的指令
     public static String COMMAND_CURRENT = "";
 
@@ -59,6 +65,8 @@ public class Contents {
     public final static String VOICE_KEY = "key";//请按键
     //指纹
     public final static String VOICE_FINGER = "finger";//请按指纹
+    //签名
+    public final static String VOICE_SIGN = "sign";//请签名
 
     public static boolean play_Contact = false;
     public static boolean play_NoContact = false;
@@ -67,6 +75,9 @@ public class Contents {
     public static boolean play_KeyMing = false;
     public static boolean play_KeyMi = false;
     public static boolean play_Finger = false;
-    public static boolean isControl=false;
-
+    public static boolean isControl = false;
+    public static boolean play_sign = false;
+    public static String folderStr = Environment.getExternalStorageDirectory().getPath() + "/Bluetooth/Sign/";
+    public static String path="";
+    public static File file;
 }

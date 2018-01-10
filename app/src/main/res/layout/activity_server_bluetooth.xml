@@ -3,6 +3,7 @@
     android:id="@+id/container"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="@mipmap/bg"
     tools:context=".activity.BluetoothServerActivity"
     tools:ignore="MergeRootFrame">
 
@@ -10,7 +11,8 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="50dp"
-        android:orientation="horizontal">
+        android:orientation="horizontal"
+        android:visibility="gone">
 
         <Button
             android:id="@+id/delete"
@@ -19,18 +21,19 @@
             android:text="删除" />
 
 
-
         <TextView
-            android:id="@+id/command"
+            android:id="@+id/commands"
             android:layout_width="0dp"
-            android:layout_weight="1"
             android:layout_height="wrap_content"
+            android:layout_weight="1"
             android:gravity="center_horizontal"
             android:textSize="30sp" />
+
         <ImageView
-            android:layout_width="wrap_content"
             android:id="@+id/imageview"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content" />
+
         <Button
             android:id="@+id/sign"
             android:layout_width="wrap_content"
@@ -46,7 +49,52 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_marginTop="50dp"
-        android:layout_weight="1"></ListView>
+        android:layout_weight="1"
+        android:visibility="gone"></ListView>
 
+    <ImageView
+        android:id="@+id/iv_contact"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="550dp"
+        android:layout_marginTop="500dp"
+        android:visibility="gone" />
 
+    <ImageView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_centerInParent="true"
+        android:src="@mipmap/devices" />
+
+    <ImageView
+        android:id="@+id/iv_nocontact"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="180dp"
+        android:layout_marginTop="370dp"
+        android:visibility="gone" />
+
+    <ImageView
+        android:id="@+id/iv_finger"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="950dp"
+        android:layout_marginTop="400dp"
+        android:visibility="gone" />
+
+    <TextView
+        android:id="@+id/command"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerHorizontal="true"
+        android:gravity="center_horizontal"
+        android:textSize="50sp" />
+    <ImageView
+        android:visibility="gone"
+        android:id="@+id/iv_magnetic"
+        android:layout_marginTop="10dp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:src="@mipmap/card"
+        android:layout_marginLeft="740dp"/>
 </RelativeLayout>

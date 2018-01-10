@@ -13,4 +13,7 @@
     <string name="send">发送</string>
     <string name="write_tip">请输入数字、字母或汉字</string>
     <string name="bluetooth_unopened">蓝牙未开启，请先开启蓝牙</string>
+    <string name="agreement">I agree the terms and conditions.</string>
+    <string name="clear_pad">Clear Pad</string>
+    <string name="save_signature">Save Signature</string>
 </resources>

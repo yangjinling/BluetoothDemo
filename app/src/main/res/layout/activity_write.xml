@@ -116,6 +116,7 @@
             android:layout_weight="1">
 
             <Button
+                android:visibility="gone"
                 android:id="@+id/btn_trade_detail"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"

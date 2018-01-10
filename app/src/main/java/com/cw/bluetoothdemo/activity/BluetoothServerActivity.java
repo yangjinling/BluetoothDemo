@@ -20,6 +20,9 @@ import android.support.annotation.RequiresPermission;
 import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
+import android.view.animation.AlphaAnimation;
+import android.view.animation.AnimationSet;
+import android.view.animation.TranslateAnimation;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
@@ -80,50 +83,59 @@ public class BluetoothServerActivity extends Activity {
             String[] arrRet;
             prograss.setVisibility(View.GONE);
             Contents.play_Finger = false;
+            handler.postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    clearAnimator();
+                }
+            }, 1000);
             switch (msg.what) {
                 case 0:
+                    clearAnimator();
                     arrRet = (String[]) msg.obj;
                     lists.add("" + arrRet[0] + arrRet[1]);
                     adapter.notifyDataSetChanged();
                     if (arrRet[0].equals("0")) {
-                        dealFingerData("52"+arrRet[1] + "9000");
+                        dealFingerData("52" + arrRet[1] + "9000");
                         Log.e("YJL", "version==" + arrRet[1]);
                     } else {
 //                        tv_version.setText("");
                         Log.e("YJL", "version==失败");
 //                        getVersion(blueOrWifi, ble);
-                        dealFingerData("52"+arrRet[0] + arrRet[1] + "9000");
+                        dealFingerData("52" + arrRet[0] + arrRet[1] + "9000");
                         Toast.makeText(getApplicationContext(), "版本获取失败，重新获取", Toast.LENGTH_SHORT).show();
                     }
                     break;
                 case 1:
                     //模板
+                    clearAnimator();
                     arrRet = (String[]) msg.obj;
                     lists.add("" + arrRet[0] + arrRet[1]);
                     adapter.notifyDataSetChanged();
                     if (arrRet[0].equals("0")) {
                         mb = arrRet[1];
                         Log.e("YJL", "mb===" + mb);
-                        dealFingerData("52"+mb + "9000");
+                        dealFingerData("52" + mb + "9000");
                     } else {
                         mb = "";
 //                        getMB(blueOrWifi, ble);
-                        dealFingerData("52"+arrRet[0] + arrRet[1] + "9000");
+                        dealFingerData("52" + arrRet[0] + arrRet[1] + "9000");
                         Toast.makeText(getApplicationContext(), "模板获取失败，重新获取", Toast.LENGTH_SHORT).show();
                     }
                     break;
                 case 2:
                     //特征
+                    clearAnimator();
                     arrRet = (String[]) msg.obj;
                     lists.add("" + arrRet[0] + arrRet[1]);
                     adapter.notifyDataSetChanged();
                     if (arrRet[0].equals("0")) {
                         tz = arrRet[1];
-                        dealFingerData("52"+tz + "9000");
+                        dealFingerData("52" + tz + "9000");
                         Log.e("YJL", "tz===" + tz);
                     } else {
                         tz = "";
-                        dealFingerData("52"+arrRet[0] + arrRet[1] + "9000");
+                        dealFingerData("52" + arrRet[0] + arrRet[1] + "9000");
                         Toast.makeText(getApplicationContext(), "特征获取失败，重新获取", Toast.LENGTH_SHORT).show();
 //                        getTZ(blueOrWifi, ble);
                     }
@@ -136,6 +148,10 @@ public class BluetoothServerActivity extends Activity {
     private Button sign;
     String[] arrRet;
     private ImageView imageview;
+    private ImageView contact;
+    private ImageView nocontact;
+    private ImageView finger;
+    private ImageView magnetic;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -203,7 +219,7 @@ public class BluetoothServerActivity extends Activity {
         sign.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View view) {
-                Intent intent = new Intent(BluetoothServerActivity.this, WriteActivity.class);
+                Intent intent = new Intent(BluetoothServerActivity.this, SignActivity.class);
                 startActivity(intent);
 //                showDialog();
             }
@@ -212,6 +228,10 @@ public class BluetoothServerActivity extends Activity {
         prograss = ((LinearLayout) findViewById(R.id.layout_prograss));
         prograss_tv = ((TextView) findViewById(R.id.prograss_tv));
         imageview = ((ImageView) findViewById(R.id.imageview));
+        contact = ((ImageView) findViewById(R.id.iv_contact));
+        nocontact = ((ImageView) findViewById(R.id.iv_nocontact));
+        finger = ((ImageView) findViewById(R.id.iv_finger));
+        magnetic = ((ImageView) findViewById(R.id.iv_magnetic));
     }
 
     private void dealFingerData(String data) {
@@ -301,14 +321,23 @@ public class BluetoothServerActivity extends Activity {
                 Log.e("YJL", "设备忙");
                 return;
             }
+            nocontact.setVisibility(View.GONE);
+            contact.setVisibility(View.GONE);
+            finger.setVisibility(View.VISIBLE);
+            finger.setBackgroundResource(R.mipmap.finger);
+            displayWholeAnimation(2);//指纹
             getVersion(blueOrWifi, ble);
-
         } else if (Contents.COMMAND_FINGER_FEATURE.equals(cmd)) {
             //指纹usb---获取特征
             if (g_bIsRunning) {
                 Log.e("YJL", "设备忙");
                 return;
             }
+            nocontact.setVisibility(View.GONE);
+            contact.setVisibility(View.GONE);
+            finger.setVisibility(View.VISIBLE);
+            finger.setBackgroundResource(R.mipmap.finger);
+            displayWholeAnimation(2);//指纹
             getTZ(blueOrWifi, ble);
         } else if (Contents.COMMAND_FINGER_MODE.equals(cmd)) {
             //指纹usb---获取模板
@@ -316,10 +345,15 @@ public class BluetoothServerActivity extends Activity {
                 Log.e("YJL", "设备忙");
                 return;
             }
+            nocontact.setVisibility(View.GONE);
+            contact.setVisibility(View.GONE);
+            finger.setVisibility(View.VISIBLE);
+            finger.setBackgroundResource(R.mipmap.finger);
+            displayWholeAnimation(2);//指纹
             getMB(blueOrWifi, ble);
         } else if (Contents.COMMAND_SIGN.equals(cmd)) {
             //签名
-            Intent intent1 = new Intent(BluetoothServerActivity.this, WriteActivity.class);
+            Intent intent1 = new Intent(BluetoothServerActivity.this, SignActivity.class);
             startActivityForResult(intent1, 100);
 //            showDialog();
         } else {
@@ -353,7 +387,7 @@ public class BluetoothServerActivity extends Activity {
         Message message = new Message();
         message.what = 0;
         message.obj = arrRet;
-        handler.sendMessage(message);
+        handler.sendMessageDelayed(message, 10);
             /*    return;
             }
         }.start();*/
@@ -377,7 +411,7 @@ public class BluetoothServerActivity extends Activity {
                 Message message = new Message();
                 message.what = 2;
                 message.obj = arrRet;
-                handler.sendMessage(message);
+                handler.sendMessageDelayed(message, 10);
                 return;
             }
         }.start();
@@ -399,7 +433,7 @@ public class BluetoothServerActivity extends Activity {
                 Message message = new Message();
                 message.what = 1;
                 message.obj = arrRet;
-                handler.sendMessage(message);
+                handler.sendMessageDelayed(message, 10);
                 return;
             }
         }.start();
@@ -447,7 +481,7 @@ public class BluetoothServerActivity extends Activity {
                     if (Contents.play_KeyMi || Contents.play_KeyMing) {
                         //查看是否明文密文指令
                     } else {
-                        command.setText("");
+//                        command.setText("");
                     }
                     if (data.equals("00026984") || data.equals("5200026984")) {
                         sendMessagBySerialPort(cmd, blueOrWifi, ble);
@@ -466,7 +500,7 @@ public class BluetoothServerActivity extends Activity {
                                 //设置当前prograss是否隐藏
                                 setPrograssShow();
                             /*状态码显示*/
-                                command.setText("" + strSW);
+//                                command.setText("" + strSW);
                                 if (blueOrWifi) {
                                     //true：蓝牙
                                     if (ble) {
@@ -549,52 +583,81 @@ public class BluetoothServerActivity extends Activity {
         switch (s) {
             //获取版本指令
             case Contents.COMMAND_VERSION:
+                command.setVisibility(View.GONE);
                 command.setText("");
                 prograss.setVisibility(View.VISIBLE);
                 prograss_tv.setText("获取固件版本");
                 break;
             //IC_接触卡指令
             case Contents.COMMAND_IC_CONTACT_1:
+                command.setVisibility(View.GONE);
                 command.setText("");
                 if (!Contents.play_Contact) {
-                    prograss.setVisibility(View.VISIBLE);
-                    prograss_tv.setText("请插卡");
+//                    prograss.setVisibility(View.VISIBLE);
+//                    prograss_tv.setText("请插卡");
                     setPlayVoice(1);
+                    nocontact.setVisibility(View.GONE);
+                    contact.setVisibility(View.VISIBLE);
+                    finger.setVisibility(View.GONE);
+                    magnetic.setVisibility(View.GONE);
                     MediaServiceManager.startService(BluetoothServerActivity.this, Contents.VOICE_BANKCARD1, null);
+                    contact.setBackgroundResource(R.mipmap.card);
+                    displayWholeAnimation(1);//接触
                 }
                 break;
             //IC_非接触卡指令
             case Contents.COMMAND_IC_NOCONTACT_1:
+                command.setVisibility(View.GONE);
                 command.setText("");
                 if (!Contents.play_NoContact) {
-                    prograss.setVisibility(View.VISIBLE);
-                    prograss_tv.setText("请挥卡");
+                    nocontact.setVisibility(View.VISIBLE);
+                    contact.setVisibility(View.GONE);
+                    finger.setVisibility(View.GONE);
+                    magnetic.setVisibility(View.GONE);
+//                    prograss.setVisibility(View.VISIBLE);
+//                    prograss_tv.setText("请挥卡");
+                    nocontact.setBackgroundResource(R.mipmap.card);
                     setPlayVoice(2);
+                    displayWholeAnimation(0); //非接触
                     MediaServiceManager.startService(BluetoothServerActivity.this, Contents.VOICE_BANKCARD2, null);
                 }
                 break;
             //身份证指令
             case Contents.COMMAND_IDCARD_1:
+                command.setVisibility(View.GONE);
                 command.setText("");
                 if (!Contents.play_Idcard) {
-                    prograss.setVisibility(View.VISIBLE);
-                    prograss_tv.setText("请放身份证");
+//                    prograss.setVisibility(View.VISIBLE);
+//                    prograss_tv.setText("请放身份证");
+                    nocontact.setVisibility(View.VISIBLE);
+                    contact.setVisibility(View.GONE);
+                    finger.setVisibility(View.GONE);
+                    magnetic.setVisibility(View.GONE);
                     setPlayVoice(3);
                     MediaServiceManager.startService(BluetoothServerActivity.this, Contents.VOICE_IDCARD, null);
+                    nocontact.setBackgroundResource(R.mipmap.idcard);
+                    displayWholeAnimation(0);//接触
                 }
                 break;
             //磁条卡指令
             case Contents.COMMAND_MAGNETIC:
+                command.setVisibility(View.GONE);
                 command.setText("");
                 if (!Contents.play_Magnetic) {
                     prograss.setVisibility(View.VISIBLE);
                     prograss_tv.setText("请刷磁条卡");
                     setPlayVoice(4);
+                    nocontact.setVisibility(View.GONE);
+                    contact.setVisibility(View.GONE);
+                    finger.setVisibility(View.GONE);
+                    magnetic.setVisibility(View.VISIBLE);
+                    displayWholeAnimation(3);
                     MediaServiceManager.startService(BluetoothServerActivity.this, Contents.VOICE_MAGNETIC, null);
                 }
                 break;
             //明文指令
             case Contents.COMMAND_PIN_PLAINTEXT:
+                command.setVisibility(View.VISIBLE);
                 command.setText("");
                 if (!Contents.play_KeyMing) {
                     prograss.setVisibility(View.VISIBLE);
@@ -605,6 +668,7 @@ public class BluetoothServerActivity extends Activity {
                 break;
             //密文指令
             case Contents.COMMAND_PIN_CIPHERTEXT_1:
+                command.setVisibility(View.VISIBLE);
                 command.setText("");
                 if (!Contents.play_KeyMi) {
                     Contents.COMMAND_CURRENT = Contents.COMMAND_PIN_CIPHERTEXT_1;
@@ -617,6 +681,7 @@ public class BluetoothServerActivity extends Activity {
 
             //指纹指令
             case Contents.COMMAND_FINGER_VERSION:
+                command.setVisibility(View.GONE);
                 command.setText("");
                 if (!Contents.play_Finger) {
                     prograss.setVisibility(View.VISIBLE);
@@ -626,6 +691,7 @@ public class BluetoothServerActivity extends Activity {
                 }
                 break;
             case Contents.COMMAND_FINGER_FEATURE:
+                command.setVisibility(View.GONE);
                 command.setText("");
                 if (!Contents.play_Finger) {
                     prograss.setVisibility(View.VISIBLE);
@@ -635,6 +701,7 @@ public class BluetoothServerActivity extends Activity {
                 }
                 break;
             case Contents.COMMAND_FINGER_MODE:
+                command.setVisibility(View.GONE);
                 command.setText("");
                 if (!Contents.play_Finger) {
                     prograss.setVisibility(View.VISIBLE);
@@ -656,11 +723,12 @@ public class BluetoothServerActivity extends Activity {
             //执行刷卡结束的指令后播放标记置为false
             case Contents.COMMAND_IC_END:
                 setPlayVoice(8);
-
+                clearAnimator();
                 break;
             //执行身份证结束的指令后播放标记置为false
             case Contents.COMMAND_IDCARD_2:
                 setPlayVoice(8);
+                clearAnimator();
                 break;
         }
     }
@@ -674,11 +742,17 @@ public class BluetoothServerActivity extends Activity {
         } else if (Contents.COMMAND_CURRENT.equals(Contents.COMMAND_IC_END)
                 || Contents.COMMAND_CURRENT.equals(Contents.COMMAND_IDCARD_2)
                 || Contents.COMMAND_CURRENT.equals(Contents.COMMAND_VERSION)) {
+            if (Contents.COMMAND_CURRENT.equals(Contents.COMMAND_IC_END)
+                    || Contents.COMMAND_CURRENT.equals(Contents.COMMAND_IDCARD_2)) {
+                clearAnimator();
+            }
             //身份证最后一条指令/刷卡最后一条指令/获取版本
             prograss.setVisibility(View.GONE);
+
         } else {
             if (Contents.play_Magnetic) {
                 prograss.setVisibility(View.GONE);
+                clearAnimator();
                 Contents.play_Magnetic = false;
             }
             if (Contents.play_Finger) {
@@ -1010,5 +1084,99 @@ public class BluetoothServerActivity extends Activity {
             }
         }
         dealFingerData(sendMsg);
+    }
+
+
+    private void startAppearanceAnimation(int type) {
+        /**
+         * 核心类 AnimationSet 顾名思义，可以简单理解为将多种动画放在一个set集合里面
+         *    产生渐渐显示+位移动画，将加速小火箭渐渐显示出来;
+         *
+         */
+        AlphaAnimation alphaAnimation = new AlphaAnimation(0.0f, 1.0f);
+        TranslateAnimation translateAnimation = null;
+        if (type == 0) {
+            translateAnimation = new TranslateAnimation(0, 200, 0, 0);
+        } else if (type == 1) {
+            translateAnimation = new TranslateAnimation(0, 0, 0, -200);
+        } else if (type == 2) {
+            translateAnimation = new TranslateAnimation(0, -500, 0, 0);
+        } else if (type == 3) {
+            translateAnimation = new TranslateAnimation(0, 0, 0, 500);
+        }
+        translateAnimation.setRepeatCount(Integer.MAX_VALUE);
+        alphaAnimation.setRepeatCount(Integer.MAX_VALUE);
+        AnimationSet animationSet = new AnimationSet(true);
+        animationSet.setFillAfter(true);
+        animationSet.setDuration(2000);
+        animationSet.setRepeatMode(Integer.MAX_VALUE);
+        animationSet.addAnimation(translateAnimation);
+        animationSet.addAnimation(alphaAnimation);
+        if (type == 0) {
+            nocontact.startAnimation(animationSet);
+        } else if (type == 1) {
+            contact.startAnimation(animationSet);
+        } else if (type == 2) {
+            finger.startAnimation(animationSet);
+        } else if (type == 3) {
+            magnetic.startAnimation(animationSet);
+        }
+    }
+
+    private void startDisappearanceAnimation(int type) {
+        TranslateAnimation translateAnimation = null;
+        if (type == 0) {
+            translateAnimation = new TranslateAnimation(0, 200, 0, 0);
+        } else if (type == 1) {
+            translateAnimation = new TranslateAnimation(0, 0, 0, -200);
+        } else if (type == 2) {
+            translateAnimation = new TranslateAnimation(0, -150, 0, 0);
+        } else if (type == 3) {
+            translateAnimation = new TranslateAnimation(0, 0, 0, 500);
+        }
+        AlphaAnimation alphaAnimation = new AlphaAnimation(1.0f, 0.0f);
+        AnimationSet animationSet = new AnimationSet(true);
+        animationSet.setFillAfter(true);
+        translateAnimation.setRepeatCount(Integer.MAX_VALUE);
+        alphaAnimation.setRepeatCount(Integer.MAX_VALUE);
+        animationSet.setDuration(2000);
+        animationSet.addAnimation(translateAnimation);
+        animationSet.addAnimation(alphaAnimation);
+        if (type == 0) {
+            nocontact.startAnimation(animationSet);
+        } else if (type == 1) {
+            contact.startAnimation(animationSet);
+        } else if (type == 2) {
+            finger.startAnimation(animationSet);
+        } else if (type == 3) {
+            magnetic.startAnimation(animationSet);
+        }
+    }
+
+    private void displayWholeAnimation(final int type) {
+        startAppearanceAnimation(type);
+        new Handler().postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                startDisappearanceAnimation(type);
+            }
+        }, 100);
+    }
+
+    private void clearAnimator() {
+        Log.e("YJL", "取消动画");
+        nocontact.clearAnimation();
+        contact.clearAnimation();
+        finger.clearAnimation();
+        magnetic.clearAnimation();
+        magnetic.invalidate();
+        nocontact.invalidate();
+        finger.invalidate();
+        contact.invalidate();
+        nocontact.setVisibility(View.GONE);
+        contact.setVisibility(View.GONE);
+        finger.setVisibility(View.GONE);
+        magnetic.setVisibility(View.GONE);
+
     }
 }

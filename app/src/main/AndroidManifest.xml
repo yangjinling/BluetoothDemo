@@ -57,9 +57,9 @@
                 <!--<category android:name="android.intent.category.DEFAULT" />
                <category android:name="android.intent.category.HOME" />-->
                 <category android:name="android.intent.category.LAUNCHER" />
-                <!--
-                                <action android:name="android.hardware.usb.action.USB_DEVICE_ATTACHED" />
-                -->
+<!--
+                <action android:name="android.hardware.usb.action.USB_DEVICE_ATTACHED" />
+-->
             </intent-filter>
             <meta-data
                 android:name="android.hardware.usb.action.USB_DEVICE_ATTACHED"
@@ -71,7 +71,7 @@
         <service android:name=".service.BleService"></service>
         <service android:name=".service.WifiService"></service>
 
-        <receiver
+      <!--  <receiver
             android:name=".receiver.MyReceiver"
             android:enabled="true"
             android:exported="true">
@@ -80,7 +80,7 @@
 
                 <category android:name="android.intent.category.HOME" />
             </intent-filter>
-        </receiver>
+        </receiver>-->
 
         <activity android:name=".activity.BleActivity"></activity>
         <activity

@@ -1,5 +1,6 @@
 package com.cw.bluetoothdemo.app;
 
+import android.app.Activity;
 import android.os.Environment;
 
 import java.io.File;
@@ -30,7 +31,7 @@ public class Contents {
     //IC_非接触卡指令
     public final static String COMMAND_IC_NOCONTACT_1 = "EE0011FB80101400000A62000000000000000000";
 
-    public final static String COMMAND_IC_END = "F80007810005000000";
+    public final static String COMMAND_IC_END = "F80007FB810005000000";
     //身份证指令
     public final static String COMMAND_IDCARD_1 = "F80007FB801114000000";
     public final static String COMMAND_IDCARD_2 = "F80007FB810005000000";
@@ -68,6 +69,7 @@ public class Contents {
     //签名
     public final static String VOICE_SIGN = "sign";//请签名
 
+    public final static  String COMMAND_CANCLE="FA";
     public static boolean play_Contact = false;
     public static boolean play_NoContact = false;
     public static boolean play_Idcard = false;
@@ -80,4 +82,5 @@ public class Contents {
     public static String folderStr = Environment.getExternalStorageDirectory().getPath() + "/Bluetooth/Sign/";
     public static String path="";
     public static File file;
+    public static Activity activity;
 }

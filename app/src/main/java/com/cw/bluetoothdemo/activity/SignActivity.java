@@ -13,6 +13,7 @@ import android.os.Environment;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.util.Log;
+import android.view.KeyEvent;
 import android.view.View;
 import android.widget.Button;
 import android.widget.Toast;
@@ -20,6 +21,7 @@ import android.widget.Toast;
 
 import com.cw.bluetoothdemo.R;
 import com.cw.bluetoothdemo.app.AppConfig;
+import com.cw.bluetoothdemo.app.Contents;
 import com.github.gcacace.signaturepad.views.SignaturePad;
 
 import java.io.File;
@@ -42,12 +44,12 @@ public class SignActivity extends Activity {
         super.onCreate(savedInstanceState);
         verifyStoragePermissions(this);
         setContentView(R.layout.activity_sign);
-
+        Contents.activity=this;
         mSignaturePad = (SignaturePad) findViewById(R.id.signature_pad);
         mSignaturePad.setOnSignedListener(new SignaturePad.OnSignedListener() {
             @Override
             public void onStartSigning() {
-                Toast.makeText(SignActivity.this, "OnStartSigning", Toast.LENGTH_SHORT).show();
+//                Toast.makeText(SignActivity.this, "OnStartSigning", Toast.LENGTH_SHORT).show();
             }
 
             @Override
@@ -188,5 +190,19 @@ public class SignActivity extends Activity {
                     REQUEST_EXTERNAL_STORAGE
             );
         }
+    }
+    @Override
+    public void onBackPressed() {
+        super.onBackPressed();
+    }
+
+    @Override
+    public boolean onKeyDown(int keyCode, KeyEvent event) {
+        if (keyCode == KeyEvent.KEYCODE_BACK) {
+            setResult(RESULT_CANCELED);
+            finish();
+        }
+        return super.onKeyDown(keyCode, event);
+
     }
 }

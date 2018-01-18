@@ -43,7 +43,7 @@ public class SerialConnection {
 	}
 
 	/**
-	 * ��ʼ���˿�
+	 *
 	 */
 	private void initSerialPort() {
 		try {

@@ -95,6 +95,6 @@
         android:layout_marginTop="10dp"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:src="@mipmap/card"
-        android:layout_marginLeft="740dp"/>
+        android:src="@mipmap/magnetic"
+        android:layout_marginLeft="920dp"/>
 </RelativeLayout>

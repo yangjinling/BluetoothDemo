@@ -11,9 +11,11 @@ import com.cw.bluetoothdemo.app.AppConfig;
 public class SerialApp {
     private SerialPort mSerialPort = null;
     private static final String PREFS_NAME = "SerialPort"; // 参数名称
-    	private static String device = "ttyHSL0"; // 设备名称
+        	private static String device = "ttyHSL0"; // 设备名称
     private int baudrate = 115200; // 波特率
-//    private static String device = "ttyS3"; // 设备名称
+//    private static String device = "ttyXRM0"; // 设备名称
+//    private int baudrate = 9600; // 波特率
+
 
     public SerialPort getSerialPort(Context context)
             throws SecurityException, IOException {
@@ -37,7 +39,6 @@ public class SerialApp {
             path = path + device;
             // 新建一个串行端口，在串行端口里面新建文件的路径，波特率，方向）
             mSerialPort = new SerialPort(new File(path), baudrate, 0);
-
             AppConfig.getInstance().setmSerialPort(mSerialPort);
         }
         return mSerialPort;

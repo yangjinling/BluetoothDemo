@@ -12,8 +12,8 @@ public class SerialApp {
     private SerialPort mSerialPort = null;
     private static final String PREFS_NAME = "SerialPort"; // 参数名称
         	private static String device = "ttyHSL0"; // 设备名称
-    private int baudrate = 115200; // 波特率
-//    private static String device = "ttyXRM0"; // 设备名称
+    private int baudrate = 115200; // 波特率38400
+//    private static String device = "ttyS3"; // 设备名称
 //    private int baudrate = 9600; // 波特率
 
 

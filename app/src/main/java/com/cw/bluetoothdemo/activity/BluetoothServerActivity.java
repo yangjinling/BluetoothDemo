@@ -949,14 +949,14 @@ public class BluetoothServerActivity extends Activity {
         AppConfig.getInstance().closeSerialPort();
         mIFpDevDriver.cancel();
         mIFpDevDriver.closeDevice();
-        Control.gpio_control(927, 0);//串口
+  /*      Control.gpio_control(927, 0);//串口
         Control.gpio_control(921, 0);//host3
         Control.gpio_control(920, 0);//host4
         Control.gpio_control(922, 0);//host1
         Control.gpio_control(1006, 0);//host2
         Control.gpio_control(1010, 0);//hub
         Control.gpio_control(1009, 0);//hub
-        Control.gpio_control(969, 0);//切换host
+        Control.gpio_control(969, 0);//切换host*/
        /* Control.gpio_control(927, 0);//串口
         Control.gpio_control(921, 0);//host3
         Control.gpio_control(920, 0);//host4
@@ -966,6 +966,7 @@ public class BluetoothServerActivity extends Activity {
         Control.gpio_control(1009, 0);//hub
         Control.gpio_control(969, 0);//切换host
         PrefUtils.setBoolean(AppConfig.getContext(), "WAKE", false);*/
+//        Control.gpio_control(927, 0);//串口
         super.onDestroy();
         Log.d(TAG, "onDestroy");
     }

@@ -38,6 +38,7 @@ public class MyApplication extends Application {
     public void onCreate() {
         super.onCreate();
         AppConfig.setContext(getApplicationContext());
+//        Control.gpio_control(927, 1);//串口
       /*  if (!PrefUtils.getBoolean(AppConfig.getContext(), "WAKE", true)) {
             Control.gpio_control(927, 1);//串口
             Control.gpio_control(921, 1);//host3
@@ -48,14 +49,14 @@ public class MyApplication extends Application {
             Control.gpio_control(1009, 1);//hub
             Control.gpio_control(969, 1);//切换host
         }*/
-        Control.gpio_control(927, 1);//串口
+      /*  Control.gpio_control(927, 1);//串口
         Control.gpio_control(921, 1);//host3
         Control.gpio_control(920, 1);//host4
         Control.gpio_control(922, 1);//host1
         Control.gpio_control(1006, 1);//host2
         Control.gpio_control(1010, 1);//hub
         Control.gpio_control(1009, 1);//hub
-        Control.gpio_control(969, 1);//切换host
+        Control.gpio_control(969, 1);//切换host*/
         AppConfig.getInstance().setConnection(new SerialConnection(AppConfig.getContext()));
         AppConfig.getInstance().setmBluetoothChatUtil(BluetoothChatUtil.getInstance(getApplicationContext()));
         character = new BluetoothGattCharacteristic(

@@ -174,7 +174,7 @@ public class BoxDataUtils {
                                 Log.e("YJL", "读完了");
                                 notifyWriteThread(strReadDate);
                             }
-                        }, 100);
+                        }, 500);
 //                        h.post(new Runnable() {
 //                            @Override
 //                            public void run() {
